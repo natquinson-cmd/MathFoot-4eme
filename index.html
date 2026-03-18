@@ -150,36 +150,55 @@
   }
 
   .topics-grid {
-    display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
-    gap: 12px;
+    display: grid; grid-template-columns: 1fr; gap: 10px;
   }
+  .topics-grid.cours-grid {
+    grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 12px;
+  }
+  /* ─── MATCH CARDS (UCL style) ─── */
   .topic-card {
-    background: #0e1e5b; border-radius: var(--radius); padding: 20px;
+    background: #0e1e5b; border-radius: var(--radius); padding: 14px 16px;
     cursor: pointer; transition: all 0.3s; border: 2px solid #1a2f7a;
     position: relative; overflow: hidden;
   }
   .topic-card:hover {
-    transform: translateY(-4px); border-color: var(--gold);
-    box-shadow: 0 8px 30px rgba(212,175,55,0.15);
+    transform: translateY(-3px); border-color: var(--gold);
+    box-shadow: 0 8px 24px rgba(212,175,55,0.15);
   }
-  .topic-card .emoji { font-size: 36px; margin-bottom: 10px; }
-  .topic-card h3 { font-size: 16px; font-weight: 700; margin-bottom: 4px; }
-  .topic-card p { font-size: 12px; color: var(--text2); margin-bottom: 10px; }
-  .topic-card .difficulty {
-    display: inline-block; font-size: 11px; font-weight: 600;
-    padding: 3px 10px; border-radius: 10px;
+  .match-row {
+    display: flex; align-items: center; justify-content: center; gap: 12px;
+    margin-bottom: 8px;
+  }
+  .match-logo {
+    width: 40px; height: 40px; object-fit: contain;
+    border-radius: 4px; background: rgba(255,255,255,0.05); padding: 2px;
+  }
+  .match-score-display {
+    font-size: 24px; font-weight: 900; letter-spacing: 3px;
+    min-width: 70px; text-align: center;
+  }
+  .match-score-display .mg { color: var(--blue); }
+  .match-score-display .ms { color: var(--text2); }
+  .match-score-display .ml { color: var(--red); }
+  .match-score-display .no-score { color: var(--text2); font-size: 13px; font-weight: 600; letter-spacing: 0; }
+  .match-info {
+    text-align: center; font-size: 11px; color: var(--text2); margin-bottom: 4px;
+  }
+  .match-info .match-chapter {
+    font-size: 13px; font-weight: 700; color: var(--text);
+  }
+  .match-info .difficulty {
+    display: inline-block; font-size: 10px; font-weight: 600;
+    padding: 2px 8px; border-radius: 8px; margin-top: 4px;
   }
   .diff-facile { background: rgba(0,230,118,0.15); color: #69f0ae; }
   .diff-moyen { background: rgba(0,229,255,0.12); color: var(--blue); }
   .diff-difficile { background: rgba(212,175,55,0.15); color: var(--gold); }
 
-  .topic-progress { margin-top: 10px; height: 4px; background: #091442; border-radius: 2px; }
-  .topic-progress-fill { height: 100%; border-radius: 2px; background: var(--green); transition: width 0.5s; }
-
-  .topic-card .best-score {
-    position: absolute; top: 10px; right: 10px; font-size: 11px;
-    color: var(--gold); font-weight: 600;
-  }
+  /* Legacy topic-card fields hidden */
+  .topic-card .emoji, .topic-card .best-score { display: none; }
+  .topic-card h3, .topic-card > p { display: none; }
+  .topic-progress { display: none; }
 
   /* ─── QUIZ (MATCH) ─── */
   .quiz-header {
@@ -513,23 +532,6 @@
   }
   .lesson-nav .btn { flex: 1; text-align: center; }
 
-  /* Topic card dual buttons */
-  .topic-actions {
-    display: flex; gap: 6px; margin-top: 10px;
-  }
-  .topic-action-btn {
-    flex: 1; padding: 7px 0; border-radius: 8px; border: none;
-    font-size: 12px; font-weight: 700; cursor: pointer;
-    font-family: 'Outfit', sans-serif; transition: all 0.2s;
-  }
-  .topic-action-btn:hover { transform: translateY(-1px); }
-  .topic-action-btn.action-lesson {
-    background: rgba(41,182,246,0.15); color: var(--blue);
-  }
-  .topic-action-btn.action-match {
-    background: rgba(0,229,255,0.15); color: var(--blue);
-  }
-
   /* ─── RESPONSIVE ─── */
   @media (max-width: 500px) {
     .answers-grid { grid-template-columns: 1fr; }
@@ -692,7 +694,7 @@
       <p>Maîtrise les tactiques avant d'entrer sur le terrain !</p>
     </div>
     <div class="section-title">📚 Choisis un cours</div>
-    <div class="topics-grid" id="coursGrid"></div>
+    <div class="topics-grid cours-grid" id="coursGrid"></div>
     <div class="spacer-bottom"></div>
   </div>
 </div>
@@ -750,15 +752,27 @@ const ACHIEVEMENTS = [
   { id:'level_5', icon:'👑', name:'Demi-finaliste', desc:'Atteins les demi-finales UCL', check: s => s.level >= 5 },
 ];
 
+const OL_LOGO = 'https://tmssl.akamaized.net/images/wappen/head/1041.png';
+const CLUB_LOGOS = {
+  real:  'https://tmssl.akamaized.net/images/wappen/head/418.png',
+  barca: 'https://tmssl.akamaized.net/images/wappen/head/131.png',
+  city:  'https://tmssl.akamaized.net/images/wappen/head/281.png',
+  bayern:'https://tmssl.akamaized.net/images/wappen/head/27.png',
+  psg:   'https://tmssl.akamaized.net/images/wappen/head/583.png',
+  juve:  'https://tmssl.akamaized.net/images/wappen/head/506.png',
+  liver: 'https://tmssl.akamaized.net/images/wappen/head/31.png',
+  inter: 'https://tmssl.akamaized.net/images/wappen/head/46.png',
+};
+
 const TOPICS = [
-  { id:'calcul_litteral', emoji:'📝', name:'Calcul littéral', desc:'Développer, factoriser, réduire', diff:'moyen', foot:'Dribble technique' },
-  { id:'fractions', emoji:'🍕', name:'Fractions', desc:'Opérations sur les fractions', diff:'moyen', foot:'Passes millimétrées' },
-  { id:'puissances', emoji:'⚡', name:'Puissances', desc:'Règles de calcul des puissances', diff:'moyen', foot:'Frappes puissantes' },
-  { id:'pythagore', emoji:'📐', name:'Pythagore', desc:'Théorème de Pythagore', diff:'difficile', foot:'Angles de tir' },
-  { id:'proportionnalite', emoji:'⚖️', name:'Proportionnalité', desc:'Pourcentages, échelles', diff:'facile', foot:'Statistiques d\'équipe' },
-  { id:'statistiques', emoji:'📊', name:'Statistiques', desc:'Moyenne, médiane, étendue', diff:'facile', foot:'Analyse de match' },
-  { id:'equations', emoji:'🔍', name:'Équations', desc:'Résoudre des équations', diff:'difficile', foot:'Stratégie tactique' },
-  { id:'relatifs', emoji:'➕', name:'Nombres relatifs', desc:'Opérations avec les relatifs', diff:'facile', foot:'Différence de buts' },
+  { id:'calcul_litteral', name:'Calcul littéral', desc:'Développer, factoriser, réduire', diff:'moyen', foot:'Dribble technique', opponent:'real' },
+  { id:'fractions', name:'Fractions', desc:'Opérations sur les fractions', diff:'moyen', foot:'Passes millimétrées', opponent:'barca' },
+  { id:'puissances', name:'Puissances', desc:'Règles de calcul des puissances', diff:'moyen', foot:'Frappes puissantes', opponent:'city' },
+  { id:'pythagore', name:'Pythagore', desc:'Théorème de Pythagore', diff:'difficile', foot:'Angles de tir', opponent:'bayern' },
+  { id:'proportionnalite', name:'Proportionnalité', desc:'Pourcentages, échelles', diff:'facile', foot:'Statistiques d\'équipe', opponent:'psg' },
+  { id:'statistiques', name:'Statistiques', desc:'Moyenne, médiane, étendue', diff:'facile', foot:'Analyse de match', opponent:'juve' },
+  { id:'equations', name:'Équations', desc:'Résoudre des équations', diff:'difficile', foot:'Stratégie tactique', opponent:'liver' },
+  { id:'relatifs', name:'Nombres relatifs', desc:'Opérations avec les relatifs', diff:'facile', foot:'Différence de buts', opponent:'inter' },
 ];
 
 // ══════════════════════════════════════
@@ -783,7 +797,7 @@ const STATE_DEFAULTS = {
   totalXp: 0, level: 1, currentXp: 0,
   bestStreak: 0, totalSolved: 0, totalCorrect: 0,
   perfectQuizzes: 0, dailyCompleted: 0, fastAnswer: false,
-  topicsPlayed: 0, topicsBest: {}, achievements: [],
+  topicsPlayed: 0, topicsBest: {}, topicScores: {}, achievements: [],
   lastDaily: null, dailyStreak: 0, lastPlayDate: null,
   topicsPlayedSet: []
 };
@@ -1525,6 +1539,7 @@ function endQuiz() {
   if (quiz.topic !== 'daily') {
     const prev = state.topicsBest[quiz.topic] || 0;
     if (quiz.score > prev) state.topicsBest[quiz.topic] = quiz.score;
+    state.topicScores[quiz.topic] = { goals: quiz.score, misses: quiz.misses };
   }
 
   const today = new Date().toDateString();
@@ -1618,27 +1633,26 @@ function updateUI() {
   document.getElementById('nextXp').textContent = needed;
   document.getElementById('xpFill').style.width = (state.currentXp / needed * 100) + '%';
 
-  // Topics
+  // Topics (UCL match cards)
   const grid = document.getElementById('topicsGrid');
   grid.innerHTML = '';
   TOPICS.forEach(t => {
-    const best = state.topicsBest[t.id] || 0;
-    const hasLesson = !!LESSONS[t.id];
+    const sc = (state.topicScores && state.topicScores[t.id]) || null;
+    const oppLogo = CLUB_LOGOS[t.opponent] || '';
     const card = document.createElement('div');
     card.className = 'topic-card';
-    card.innerHTML = `
-      ${best > 0 ? `<div class="best-score">⚽ ${best}/10</div>` : ''}
-      <div class="emoji">${t.emoji}</div>
-      <h3>${t.name}</h3>
-      <p>${t.foot}</p>
-      <span class="difficulty diff-${t.diff}">${t.diff}</span>
-      <div class="topic-progress"><div class="topic-progress-fill" style="width:${best*10}%"></div></div>
-      <div class="topic-actions">
-        ${hasLesson ? `<button class="topic-action-btn action-lesson" onclick="event.stopPropagation();startLesson('${t.id}')">📖 Cours</button>` : ''}
-        <button class="topic-action-btn action-match" onclick="event.stopPropagation();startQuiz('${t.id}')">⚽ Match</button>
-      </div>
-    `;
     card.onclick = () => startQuiz(t.id);
+    card.innerHTML = `
+      <div class="match-info"><span class="match-chapter">${t.name}</span></div>
+      <div class="match-row">
+        <img class="match-logo" src="${OL_LOGO}" alt="OL">
+        <div class="match-score-display">
+          ${sc ? `<span class="mg">${sc.goals}</span><span class="ms"> - </span><span class="ml">${sc.misses}</span>` : '<span class="no-score">À jouer</span>'}
+        </div>
+        <img class="match-logo" src="${oppLogo}" alt="Adversaire">
+      </div>
+      <div class="match-info"><span class="difficulty diff-${t.diff}">${t.diff}</span></div>
+    `;
     grid.appendChild(card);
   });
 
