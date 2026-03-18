@@ -42,57 +42,35 @@
   .pitch-bg {
     position: fixed; top: 0; left: 0; width: 100%; height: 100%;
     pointer-events: none; z-index: 0; overflow: hidden;
-    background: var(--ucl-dark);
+    background:
+      url('https://images.unsplash.com/photo-1522778119026-d647f0596c20?w=1920&q=80') center center / cover no-repeat;
   }
-  /* Stadium spotlights + glow */
+  /* Dark overlay so content stays readable */
   .pitch-bg::before {
     content: ''; position: absolute; top: 0; left: 0; right: 0; bottom: 0;
     background:
-      /* Spotlights beams from top corners */
-      radial-gradient(ellipse 150px 500px at 10% 0%, rgba(100,180,255,0.2) 0%, transparent 100%),
-      radial-gradient(ellipse 150px 500px at 35% 0%, rgba(130,190,255,0.12) 0%, transparent 100%),
-      radial-gradient(ellipse 150px 500px at 65% 0%, rgba(130,190,255,0.12) 0%, transparent 100%),
-      radial-gradient(ellipse 150px 500px at 90% 0%, rgba(100,180,255,0.2) 0%, transparent 100%),
-      /* Wide top glow (stadium lights) */
-      radial-gradient(ellipse 100% 200px at 50% 0%, rgba(30,80,180,0.25) 0%, transparent 100%),
-      /* Central trophy glow */
-      radial-gradient(ellipse 250px 250px at 50% 35%, rgba(212,175,55,0.05) 0%, transparent 100%),
-      /* Pitch green at bottom */
-      linear-gradient(to top, rgba(20,80,20,0.15) 0%, transparent 20%),
-      /* Dark vignette */
-      radial-gradient(ellipse at 50% 50%, transparent 30%, rgba(0,0,0,0.5) 100%);
+      linear-gradient(to bottom, rgba(5,10,26,0.75) 0%, rgba(5,10,26,0.85) 50%, rgba(5,10,26,0.92) 100%);
   }
-  /* Stars + sparkles */
+  /* Blue UCL tint overlay */
   .pitch-bg::after {
     content: ''; position: absolute; top: 0; left: 0; right: 0; bottom: 0;
-    background-image:
-      radial-gradient(1.5px 1.5px at 8% 12%, rgba(255,255,255,0.3), transparent),
-      radial-gradient(1px 1px at 18% 6%, rgba(255,255,255,0.2), transparent),
-      radial-gradient(1.5px 1.5px at 30% 4%, rgba(255,255,255,0.25), transparent),
-      radial-gradient(1px 1px at 45% 14%, rgba(255,255,255,0.15), transparent),
-      radial-gradient(2px 2px at 55% 2%, rgba(212,175,55,0.35), transparent),
-      radial-gradient(1.5px 1.5px at 65% 9%, rgba(255,255,255,0.25), transparent),
-      radial-gradient(1px 1px at 78% 5%, rgba(255,255,255,0.2), transparent),
-      radial-gradient(1.5px 1.5px at 90% 11%, rgba(255,255,255,0.25), transparent),
-      radial-gradient(2px 2px at 22% 16%, rgba(212,175,55,0.25), transparent),
-      radial-gradient(2px 2px at 72% 13%, rgba(212,175,55,0.25), transparent),
-      radial-gradient(1px 1px at 3% 22%, rgba(255,255,255,0.12), transparent),
-      radial-gradient(1px 1px at 97% 20%, rgba(255,255,255,0.12), transparent),
-      radial-gradient(1.5px 1.5px at 40% 24%, rgba(255,255,255,0.1), transparent),
-      radial-gradient(1.5px 1.5px at 60% 22%, rgba(255,255,255,0.1), transparent);
-    animation: twinkle 4s ease-in-out infinite alternate;
+    background:
+      radial-gradient(ellipse at 50% 20%, rgba(14,30,91,0.4) 0%, transparent 60%),
+      radial-gradient(ellipse at 50% 80%, rgba(0,0,0,0.3) 0%, transparent 50%);
   }
-  @keyframes twinkle { 0%{opacity:0.6} 100%{opacity:1} }
 
-  .pitch-line { position: absolute; }
-  .pitch-line.center {
-    width: 200px; height: 200px; top: 50%; left: 50%; transform: translate(-50%,-50%);
-    border: 1px solid rgba(255,255,255,0.02); border-radius: 50%;
+  .pitch-line { display: none; }
+
+  /* ─── BACK BUTTON ─── */
+  .back-btn {
+    display: inline-flex; align-items: center; gap: 6px;
+    background: rgba(255,255,255,0.08); border: 1px solid rgba(255,255,255,0.1);
+    border-radius: 10px; padding: 8px 16px; color: var(--text);
+    font-size: 13px; font-weight: 600; cursor: pointer;
+    font-family: 'Outfit', sans-serif; transition: all 0.2s;
+    margin-bottom: 12px;
   }
-  .pitch-line.mid {
-    width: 100%; height: 1px; top: 50%;
-    background: linear-gradient(90deg, transparent, rgba(255,255,255,0.02), transparent);
-  }
+  .back-btn:hover { background: rgba(255,255,255,0.15); transform: translateX(-2px); }
 
   /* ─── FLOATING BALLS ─── */
   #particles { position: fixed; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; z-index: 0; }
@@ -637,6 +615,7 @@
 
   <!-- ═══ QUIZ (MATCH) ═══ -->
   <div class="screen" id="screenQuiz">
+    <button class="back-btn" onclick="if(confirm('Quitter le match ?'))showScreen('screenHome')">← Retour</button>
     <div class="quiz-header">
       <span class="quiz-topic-label" id="quizTopicLabel"></span>
       <span class="quiz-progress-text" id="quizProgress"></span>
@@ -665,6 +644,7 @@
 
   <!-- ═══ LESSON (COURS) ═══ -->
   <div class="screen" id="screenLesson">
+    <button class="back-btn" onclick="showScreen('screenCours')">← Retour aux cours</button>
     <div class="lesson-header">
       <span class="lesson-topic-label" id="lessonTopicLabel"></span>
       <span class="lesson-step-text" id="lessonStepText"></span>
@@ -699,6 +679,7 @@
 
   <!-- ═══ STATS ═══ -->
   <div class="screen" id="screenStats">
+    <button class="back-btn" onclick="showScreen('screenHome')">← Retour</button>
     <div class="section-title">📊 Statistiques Champions League</div>
     <div class="stat-row">
       <div class="stat-card"><h3>Total points</h3><div class="big-val" id="statTotalXp" style="color:var(--green)">0</div></div>
@@ -719,6 +700,7 @@
 
   <!-- ═══ COURS MENU ═══ -->
   <div class="screen" id="screenCours">
+    <button class="back-btn" onclick="showScreen('screenHome')">← Retour</button>
     <div class="welcome-banner">
       <h1>📖 Académie <span class="foot">Champions</span></h1>
       <p>Maîtrise les tactiques avant d'entrer sur le terrain !</p>
