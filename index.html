@@ -825,192 +825,323 @@ function shuffle(arr) { for(let i=arr.length-1;i>0;i--){const j=randInt(0,i);[ar
 function gcd(a,b) { a=Math.abs(a); b=Math.abs(b); while(b){[a,b]=[b,a%b];} return a; }
 function simplifyFrac(n,d) { const g=gcd(n,d); return [n/g, d/g]; }
 
+// Difficulty: 1=easy (level 1-2), 2=medium (level 3-5), 3=hard (level 6+)
+function getDiff() {
+  if (state.level <= 2) return 1;
+  if (state.level <= 5) return 2;
+  return 3;
+}
+
 const generators = {
 
   calcul_litteral() {
-    const type = randInt(1, 4);
-    if (type === 1) {
-      const k = randInt(2, 9), a = randInt(1, 10), b = randInt(1, 10);
-      const sign = Math.random() > 0.5 ? '+' : '-';
-      const expr = `${k}(${a}x ${sign} ${b})`;
-      const r1 = k * a, r2 = sign === '+' ? k * b : -k * b;
-      const answer = r2 >= 0 ? `${r1}x + ${r2}` : `${r1}x - ${Math.abs(r2)}`;
-      return {
-        question: `Développe : ${expr}`,
-        answer, type: 'mcq',
-        choices: generateChoices(answer, [`${r1}x + ${b}`, `${k+a}x + ${r2}`, `${r1}x ${sign} ${b}`, `${r1+r2}x`]),
-        explanation: `${k} × ${a}x = ${r1}x et ${k} × ${sign === '-' ? '(-' : ''}${b}${sign === '-' ? ')' : ''} = ${r2}`
-      };
-    } else if (type === 2) {
-      const a = randInt(2, 8), b = randInt(1, 6), c = randInt(1, 5), d = randInt(1, 8);
-      const rx = a + c, rn = b + d;
-      const answer = `${rx}x + ${rn}`;
-      return {
-        question: `Réduis : ${a}x + ${b} + ${c}x + ${d}`,
-        answer, type: 'mcq',
-        choices: generateChoices(answer, [`${a+b}x + ${c+d}`, `${rx}x + ${b}`, `${a}x + ${rn}`]),
-        explanation: `(${a}x + ${c}x) + (${b} + ${d}) = ${rx}x + ${rn}`
-      };
-    } else if (type === 3) {
-      const a = randInt(1, 5), b = randInt(1, 5), c = randInt(1, 5), d = randInt(1, 5);
-      const x2 = a*c, x1 = a*d + b*c, x0 = b*d;
-      const answer = `${x2}x² + ${x1}x + ${x0}`;
-      return {
-        question: `Développe : (${a}x + ${b})(${c}x + ${d})`,
-        answer, type: 'mcq',
-        choices: generateChoices(answer, [`${x2}x² + ${a*d}x + ${x0}`, `${x2}x² + ${x1}x + ${b+d}`, `${a+c}x² + ${x1}x + ${x0}`]),
-        explanation: `= ${a}x×${c}x + ${a}x×${d} + ${b}×${c}x + ${b}×${d} = ${answer}`
-      };
+    const d = getDiff();
+    if (d === 1) {
+      // FACILE: 2(3x + 1) avec petits nombres positifs, ou réduire simple
+      const sub = randInt(1, 2);
+      if (sub === 1) {
+        const k = randInt(2, 4), a = randInt(1, 3), b = randInt(1, 5);
+        const r1 = k*a, r2 = k*b;
+        const answer = `${r1}x + ${r2}`;
+        return {
+          question: `Développe : ${k}(${a}x + ${b})`,
+          hint: 'Multiplie chaque terme par le nombre devant',
+          answer, type: 'mcq',
+          choices: generateChoices(answer, [`${r1}x + ${b}`, `${k+a}x + ${r2}`, `${k}x + ${r2}`]),
+          explanation: `${k} × ${a}x = ${r1}x et ${k} × ${b} = ${r2} → ${answer}`
+        };
+      } else {
+        const a = randInt(1, 4), b = randInt(1, 5), c = randInt(1, 3), dd = randInt(1, 4);
+        const rx = a+c, rn = b+dd;
+        const answer = `${rx}x + ${rn}`;
+        return {
+          question: `Réduis : ${a}x + ${b} + ${c}x + ${dd}`,
+          hint: 'Regroupe les x ensemble et les nombres ensemble',
+          answer, type: 'mcq',
+          choices: generateChoices(answer, [`${a+b}x + ${c+dd}`, `${rx}x + ${b}`, `${a}x + ${rn}`]),
+          explanation: `(${a}x + ${c}x) + (${b} + ${dd}) = ${rx}x + ${rn}`
+        };
+      }
+    } else if (d === 2) {
+      // MOYEN: développer avec signe moins, factoriser simple
+      const sub = randInt(1, 3);
+      if (sub <= 2) {
+        const k = randInt(2, 7), a = randInt(1, 6), b = randInt(1, 8);
+        const sign = Math.random() > 0.5 ? '+' : '-';
+        const r1 = k*a, r2 = sign === '+' ? k*b : -k*b;
+        const answer = r2 >= 0 ? `${r1}x + ${r2}` : `${r1}x - ${Math.abs(r2)}`;
+        return {
+          question: `Développe : ${k}(${a}x ${sign} ${b})`,
+          answer, type: 'mcq',
+          choices: generateChoices(answer, [`${r1}x + ${b}`, `${k+a}x + ${r2}`, `${r1}x ${sign} ${b}`]),
+          explanation: `${k} × ${a}x = ${r1}x et ${k} × ${sign==='−'?'(-':''}${b}${sign==='−'?')':''} = ${r2}`
+        };
+      } else {
+        const k = randInt(2, 6), b = randInt(1, 8);
+        const answer = `${k}(x + ${b})`;
+        return {
+          question: `Factorise : ${k}x + ${k*b}`,
+          answer, type: 'mcq',
+          choices: generateChoices(answer, [`${k}(x + ${k})`, `x(${k} + ${b})`, `${k}x(1 + ${b})`]),
+          explanation: `Facteur commun ${k} : ${k}×x + ${k}×${b} = ${k}(x + ${b})`
+        };
+      }
     } else {
-      const k = randInt(2, 9), b = randInt(1, 10);
-      const answer = `${k}(x + ${b})`;
-      return {
-        question: `Factorise : ${k}x + ${k*b}`,
-        answer, type: 'mcq',
-        choices: generateChoices(answer, [`${k}(x + ${k})`, `x(${k} + ${b})`, `${k}x(1 + ${b})`]),
-        explanation: `Facteur commun ${k} : ${k}×x + ${k}×${b} = ${k}(x + ${b})`
-      };
+      // DUR: double distribution, factorisation complexe
+      const sub = randInt(1, 2);
+      if (sub === 1) {
+        const a = randInt(1,5), b = randInt(1,5), c = randInt(1,5), dd = randInt(1,5);
+        const x2 = a*c, x1 = a*dd+b*c, x0 = b*dd;
+        const answer = `${x2}x² + ${x1}x + ${x0}`;
+        return {
+          question: `Développe : (${a}x + ${b})(${c}x + ${dd})`,
+          answer, type: 'mcq',
+          choices: generateChoices(answer, [`${x2}x² + ${a*dd}x + ${x0}`, `${x2}x² + ${x1}x + ${b+dd}`, `${a+c}x² + ${x1}x + ${x0}`]),
+          explanation: `= ${a}x×${c}x + ${a}x×${dd} + ${b}×${c}x + ${b}×${dd} = ${answer}`
+        };
+      } else {
+        const k = randInt(2,9), b = randInt(1,10);
+        const answer = `${k}(x + ${b})`;
+        return {
+          question: `Factorise : ${k}x + ${k*b}`,
+          answer, type: 'mcq',
+          choices: generateChoices(answer, [`${k}(x + ${k})`, `x(${k} + ${b})`, `${k}x(1 + ${b})`]),
+          explanation: `Facteur commun ${k} : ${k}×x + ${k}×${b} = ${k}(x + ${b})`
+        };
+      }
     }
   },
 
   fractions() {
-    const type = randInt(1, 3);
-    if (type === 1) {
-      const d = randInt(2, 9), a = randInt(1, d-1), b = randInt(1, d-1);
-      const [rn, rd] = simplifyFrac(a+b, d);
+    const d = getDiff();
+    if (d === 1) {
+      // FACILE: addition même dénominateur, petits nombres
+      const den = [2,4,5,8,10][randInt(0,4)];
+      const a = randInt(1, den-1), b = randInt(1, Math.min(den-a, den-1));
+      const [rn,rd] = simplifyFrac(a+b, den);
       const answer = rd === 1 ? `${rn}` : `${rn}/${rd}`;
       return {
-        question: `Calcule : ${a}/${d} + ${b}/${d}`,
+        question: `Calcule : ${a}/${den} + ${b}/${den}`,
+        hint: 'Même dénominateur → on additionne les numérateurs',
         answer, type: 'mcq',
-        choices: generateChoices(answer, [`${a+b}/${d+d}`, `${a*b}/${d}`, `${a}/${d+b}`]),
-        explanation: `Même dénominateur : (${a}+${b})/${d} = ${a+b}/${d}${rd!==d?' = '+answer:''}`
+        choices: generateChoices(answer, [`${a+b}/${den+den}`, `${a*b}/${den}`, `${a}/${den+b}`]),
+        explanation: `Même dénominateur : (${a}+${b})/${den} = ${a+b}/${den}${rd!==den?' = '+answer:''}`
       };
-    } else if (type === 2) {
-      const a = randInt(1,7), b = randInt(2,7), c = randInt(1,7), d = randInt(2,7);
-      const [rn, rd] = simplifyFrac(a*c, b*d);
-      const answer = rd === 1 ? `${rn}` : `${rn}/${rd}`;
-      return {
-        question: `Calcule : ${a}/${b} × ${c}/${d}`,
-        answer, type: 'mcq',
-        choices: generateChoices(answer, [`${a+c}/${b+d}`, `${a*c}/${b+d}`, `${a*d}/${b*c}`]),
-        explanation: `(${a}×${c})/(${b}×${d}) = ${a*c}/${b*d}${answer !== a*c+'/'+b*d ? ' = '+answer : ''}`
-      };
+    } else if (d === 2) {
+      // MOYEN: multiplication ou dénominateurs différents simples
+      const sub = randInt(1,2);
+      if (sub === 1) {
+        const a = randInt(1,4), b = randInt(2,5), c = randInt(1,4), dd = randInt(2,5);
+        const [rn,rd] = simplifyFrac(a*c, b*dd);
+        const answer = rd === 1 ? `${rn}` : `${rn}/${rd}`;
+        return {
+          question: `Calcule : ${a}/${b} × ${c}/${dd}`,
+          answer, type: 'mcq',
+          choices: generateChoices(answer, [`${a+c}/${b+dd}`, `${a*c}/${b+dd}`, `${a*dd}/${b*c}`]),
+          explanation: `(${a}×${c})/(${b}×${dd}) = ${a*c}/${b*dd}${answer!==a*c+'/'+b*dd?' = '+answer:''}`
+        };
+      } else {
+        const d1 = randInt(2,5), d2 = d1*2;
+        const a = randInt(1, d1-1), b = randInt(1, d2-1);
+        const mult = d2/d1, num = a*mult+b;
+        const [rn,rd] = simplifyFrac(num, d2);
+        const answer = rd === 1 ? `${rn}` : `${rn}/${rd}`;
+        return {
+          question: `Calcule : ${a}/${d1} + ${b}/${d2}`,
+          answer, type: 'mcq',
+          choices: generateChoices(answer, [`${a+b}/${d1+d2}`, `${a+b}/${d2}`, `${a*b}/${d1*d2}`]),
+          explanation: `${a}/${d1} = ${a*mult}/${d2}, donc ${a*mult}/${d2} + ${b}/${d2} = ${num}/${d2}${answer!==num+'/'+d2?' = '+answer:''}`
+        };
+      }
     } else {
-      const d1 = randInt(2,6), d2 = d1 * randInt(2,3);
-      const a = randInt(1, d1-1), b = randInt(1, d2-1);
-      const mult = d2/d1, num = a*mult + b;
-      const [rn, rd] = simplifyFrac(num, d2);
+      // DUR: tout mélangé, gros nombres
+      const a = randInt(1,7), b = randInt(2,7), c = randInt(1,7), dd = randInt(2,7);
+      const [rn,rd] = simplifyFrac(a*c, b*dd);
       const answer = rd === 1 ? `${rn}` : `${rn}/${rd}`;
       return {
-        question: `Calcule : ${a}/${d1} + ${b}/${d2}`,
+        question: `Calcule : ${a}/${b} × ${c}/${dd}`,
         answer, type: 'mcq',
-        choices: generateChoices(answer, [`${a+b}/${d1+d2}`, `${a+b}/${d2}`, `${a*b}/${d1*d2}`]),
-        explanation: `${a}/${d1} = ${a*mult}/${d2}, donc ${a*mult}/${d2} + ${b}/${d2} = ${num}/${d2}${answer !== num+'/'+d2 ? ' = '+answer : ''}`
+        choices: generateChoices(answer, [`${a+c}/${b+dd}`, `${a*c}/${b+dd}`, `${a*dd}/${b*c}`]),
+        explanation: `(${a}×${c})/(${b}×${dd}) = ${a*c}/${b*dd}${answer!==a*c+'/'+b*dd?' = '+answer:''}`
       };
     }
   },
 
   puissances() {
-    const type = randInt(1, 4);
-    if (type === 1) {
-      const base = randInt(2,5), exp = randInt(2,4);
+    const d = getDiff();
+    if (d === 1) {
+      // FACILE: calcul direct 2^2, 3^2, 2^3, petites puissances
+      const base = randInt(2,4), exp = 2;
       const answer = Math.pow(base,exp).toString();
       return {
-        question: `Calcule : ${base}^${exp}`,
+        question: `Calcule : ${base}² (= ${base} × ${base})`,
+        hint: `${base}² signifie ${base} × ${base}`,
         answer, type: 'mcq',
-        choices: generateChoices(answer, [`${base*exp}`, `${Math.pow(base,exp-1)}`, `${Math.pow(base,exp+1)}`]),
-        explanation: `${base}^${exp} = ${Array(exp).fill(base).join(' × ')} = ${answer}`
+        choices: generateChoices(answer, [`${base*exp}`, `${base+exp}`, `${Math.pow(base,exp+1)}`]),
+        explanation: `${base}² = ${base} × ${base} = ${answer}`
       };
-    } else if (type === 2) {
-      const a = randInt(2,5), m = randInt(1,4), n = randInt(1,4);
-      const answer = `${a}^${m+n}`;
-      return {
-        question: `Simplifie : ${a}^${m} × ${a}^${n}`,
-        answer, type: 'mcq',
-        choices: generateChoices(answer, [`${a}^${m*n}`, `${a*a}^${m+n}`, `${a}^${Math.abs(m-n)}`]),
-        explanation: `a^m × a^n = a^(m+n) → ${a}^${m+n}`
-      };
-    } else if (type === 3) {
-      const coef = randInt(1,9), exp = randInt(3,8);
-      const num = coef * Math.pow(10,exp);
-      const answer = `${coef} × 10^${exp}`;
-      return {
-        question: `Notation scientifique : ${num.toLocaleString('fr-FR')}`,
-        answer, type: 'mcq',
-        choices: generateChoices(answer, [`${coef} × 10^${exp-1}`, `${coef}0 × 10^${exp-1}`, `${coef} × 10^${exp+1}`]),
-        explanation: `On déplace la virgule de ${exp} rangs : ${answer}`
-      };
+    } else if (d === 2) {
+      // MOYEN: calculs + règle a^m × a^n
+      const sub = randInt(1,2);
+      if (sub === 1) {
+        const base = randInt(2,5), exp = randInt(2,3);
+        const answer = Math.pow(base,exp).toString();
+        return {
+          question: `Calcule : ${base}^${exp}`,
+          answer, type: 'mcq',
+          choices: generateChoices(answer, [`${base*exp}`, `${Math.pow(base,exp-1)}`, `${Math.pow(base,exp+1)}`]),
+          explanation: `${base}^${exp} = ${Array(exp).fill(base).join(' × ')} = ${answer}`
+        };
+      } else {
+        const a = randInt(2,4), m = randInt(1,3), n = randInt(1,3);
+        const answer = `${a}^${m+n}`;
+        return {
+          question: `Simplifie : ${a}^${m} × ${a}^${n}`,
+          hint: 'a^m × a^n = a^(m+n)',
+          answer, type: 'mcq',
+          choices: generateChoices(answer, [`${a}^${m*n}`, `${a*a}^${m+n}`, `${a}^${Math.abs(m-n)}`]),
+          explanation: `a^m × a^n = a^(m+n) → ${a}^${m+n}`
+        };
+      }
     } else {
-      const a = randInt(2,4), m = randInt(2,3), n = randInt(2,3);
-      const answer = `${a}^${m*n}`;
-      return {
-        question: `Simplifie : (${a}^${m})^${n}`,
-        answer, type: 'mcq',
-        choices: generateChoices(answer, [`${a}^${m+n}`, `${a}^${m}`, `${Math.pow(a,m)}^${n}`]),
-        explanation: `(a^m)^n = a^(m×n) → ${a}^${m*n}`
-      };
+      // DUR: notation scientifique, (a^m)^n
+      const sub = randInt(1,2);
+      if (sub === 1) {
+        const coef = randInt(1,9), exp = randInt(3,7);
+        const num = coef * Math.pow(10,exp);
+        const answer = `${coef} × 10^${exp}`;
+        return {
+          question: `Notation scientifique : ${num.toLocaleString('fr-FR')}`,
+          answer, type: 'mcq',
+          choices: generateChoices(answer, [`${coef} × 10^${exp-1}`, `${coef}0 × 10^${exp-1}`, `${coef} × 10^${exp+1}`]),
+          explanation: `On déplace la virgule de ${exp} rangs : ${answer}`
+        };
+      } else {
+        const a = randInt(2,4), m = randInt(2,3), n = randInt(2,3);
+        const answer = `${a}^${m*n}`;
+        return {
+          question: `Simplifie : (${a}^${m})^${n}`,
+          answer, type: 'mcq',
+          choices: generateChoices(answer, [`${a}^${m+n}`, `${a}^${m}`, `${Math.pow(a,m)}^${n}`]),
+          explanation: `(a^m)^n = a^(m×n) → ${a}^${m*n}`
+        };
+      }
     }
   },
 
   pythagore() {
-    const triplets = [[3,4,5],[5,12,13],[6,8,10],[8,15,17],[9,12,15],[7,24,25]];
-    const [a,b,c] = triplets[randInt(0, triplets.length-1)];
+    const d = getDiff();
     const stade = rStade();
-    const type = randInt(1, 3);
-    if (type === 1) {
+    if (d === 1) {
+      // FACILE: triplet 3,4,5 uniquement, trouver l'hypoténuse, avec rappel formule
+      const [a,b,c] = [3,4,5];
       return {
-        question: `${rPlayer()} tire ${stade}. La distance au but forme un triangle de côtés ${a}m et ${b}m. Quelle est la diagonale ?`,
-        hint: 'c² = a² + b²',
+        question: `Triangle rectangle : côtés ${a}m et ${b}m. Quelle est l'hypoténuse ?`,
+        hint: 'c² = a² + b² → c² = 9 + 16 = 25 → c = ?',
         answer: c.toString(), type: 'mcq',
-        choices: generateChoices(c.toString(), [`${a+b}`, `${Math.round(Math.sqrt(a*a+b*b)+1)}`, `${a*b/2}`]),
-        explanation: `c² = ${a}² + ${b}² = ${a*a} + ${b*b} = ${c*c} → c = ${c}m`
+        choices: generateChoices(c.toString(), [`${a+b}`, `${a*b}`, `7`]),
+        explanation: `c² = ${a}² + ${b}² = 9 + 16 = 25 → c = √25 = ${c}m`
       };
-    } else if (type === 2) {
-      return {
-        question: `La passe de ${rPlayer()} parcourt ${c}m en diagonale, ${b}m en longueur. Quelle largeur ?`,
-        hint: 'a² = c² - b²',
-        answer: a.toString(), type: 'mcq',
-        choices: generateChoices(a.toString(), [`${c-b}`, `${Math.round(Math.sqrt(c*c-b*b)+1)}`, `${c+b}`]),
-        explanation: `a² = ${c}² - ${b}² = ${c*c} - ${b*b} = ${a*a} → a = ${a}m`
-      };
+    } else if (d === 2) {
+      // MOYEN: plusieurs triplets, trouver hypoténuse ou côté
+      const triplets = [[3,4,5],[6,8,10],[5,12,13]];
+      const [a,b,c] = triplets[randInt(0,triplets.length-1)];
+      const sub = randInt(1,2);
+      if (sub === 1) {
+        return {
+          question: `${rPlayer()} tire ${stade}. Triangle de côtés ${a}m et ${b}m. Diagonale ?`,
+          hint: 'c² = a² + b²',
+          answer: c.toString(), type: 'mcq',
+          choices: generateChoices(c.toString(), [`${a+b}`, `${c+1}`, `${a*b/2}`]),
+          explanation: `c² = ${a}² + ${b}² = ${a*a} + ${b*b} = ${c*c} → c = ${c}m`
+        };
+      } else {
+        return {
+          question: `Passe de ${rPlayer()} : diagonale ${c}m, longueur ${b}m. Largeur ?`,
+          hint: 'a² = c² - b²',
+          answer: a.toString(), type: 'mcq',
+          choices: generateChoices(a.toString(), [`${c-b}`, `${c+b}`, `${a+1}`]),
+          explanation: `a² = ${c}² - ${b}² = ${c*c} - ${b*b} = ${a*a} → a = ${a}m`
+        };
+      }
     } else {
-      const isRight = Math.random() > 0.4;
-      let x,y,z;
-      if (isRight) { [x,y,z] = [a,b,c]; } else { x=a; y=b; z=c+randInt(1,3); }
-      return {
-        question: `Zone d'entraînement ${stade} : côtés ${x}m, ${y}m, ${z}m. Est-elle rectangle ?`,
-        hint: 'Vérifie si a² + b² = c²',
-        answer: isRight ? 'Oui' : 'Non', type: 'mcq',
-        choices: [{ text:'Oui', value:'Oui' }, { text:'Non', value:'Non' }],
-        explanation: `${x}² + ${y}² = ${x*x+y*y} et ${z}² = ${z*z}. ${x*x+y*y===z*z?'Égaux → rectangle':'Différents → pas rectangle'}.`
-      };
+      // DUR: triplets plus durs, vérifier si rectangle
+      const triplets = [[5,12,13],[8,15,17],[7,24,25],[9,12,15]];
+      const [a,b,c] = triplets[randInt(0,triplets.length-1)];
+      const sub = randInt(1,3);
+      if (sub <= 2) {
+        return {
+          question: `${rPlayer()} tire ${stade}. Triangle de côtés ${a}m et ${b}m. Diagonale ?`,
+          hint: 'c² = a² + b²', answer: c.toString(), type: 'mcq',
+          choices: generateChoices(c.toString(), [`${a+b}`, `${c+1}`, `${a*b/2}`]),
+          explanation: `c² = ${a}² + ${b}² = ${a*a} + ${b*b} = ${c*c} → c = ${c}m`
+        };
+      } else {
+        const isRight = Math.random() > 0.4;
+        let x,y,z;
+        if (isRight) { [x,y,z]=[a,b,c]; } else { x=a;y=b;z=c+randInt(1,3); }
+        return {
+          question: `Zone ${stade} : côtés ${x}m, ${y}m, ${z}m. Rectangle ?`,
+          hint: 'Vérifie si a² + b² = c²',
+          answer: isRight ? 'Oui' : 'Non', type: 'mcq',
+          choices: [{ text:'Oui', value:'Oui' }, { text:'Non', value:'Non' }],
+          explanation: `${x}² + ${y}² = ${x*x+y*y} et ${z}² = ${z*z}. ${x*x+y*y===z*z?'Égaux → rectangle':'Différents → pas rectangle'}.`
+        };
+      }
     }
   },
 
   proportionnalite() {
-    const type = randInt(1, 3);
-    if (type === 1) {
-      const pct = [10,15,20,25,30,40,50,75][randInt(0,7)];
-      const base = randInt(2,20) * 10;
-      const answer = (base*pct/100).toString();
-      const items = [`Un maillot de ${rTeam()}`,`Un billet ${rStade()}`,`Une écharpe de ${rTeam()}`];
-      return {
-        question: `${items[randInt(0,items.length-1)]} à ${base}€ soldé de ${pct}%. Combien de réduction ?`,
-        answer, type: 'input',
-        explanation: `${pct}/100 × ${base} = ${answer}€`
-      };
-    } else if (type === 2) {
-      const x = randInt(2,8), y = randInt(10,50), k = randInt(2,5);
-      const answer = (y*k).toString();
-      return {
-        question: `${x} places ${rStade()} coûtent ${y}€. Prix de ${x*k} places ?`,
-        answer, type: 'input',
-        explanation: `${x*k} ÷ ${x} = ${k}, donc ${y} × ${k} = ${answer}€`
-      };
+    const d = getDiff();
+    if (d === 1) {
+      // FACILE: 50% ou 10% de nombres ronds, ou doubler/tripler un prix
+      const sub = randInt(1,2);
+      if (sub === 1) {
+        const pct = [10,50][randInt(0,1)];
+        const base = [20,40,50,60,80,100][randInt(0,5)];
+        const answer = (base*pct/100).toString();
+        return {
+          question: `Un maillot de ${rTeam()} coûte ${base}€. Réduction de ${pct}% = combien d'euros ?`,
+          hint: pct === 50 ? 'Divise par 2 !' : 'Divise par 10 !',
+          answer, type: 'input',
+          explanation: `${pct}% de ${base} = ${answer}€`
+        };
+      } else {
+        const x = randInt(1,3), y = randInt(2,10), k = 2;
+        const answer = (y*k).toString();
+        return {
+          question: `${x} place(s) ${rStade()} = ${y}€. Prix de ${x*k} places ?`,
+          hint: `${x*k} places = le double de ${x} place(s)`,
+          answer, type: 'input',
+          explanation: `C'est le double : ${y} × ${k} = ${answer}€`
+        };
+      }
+    } else if (d === 2) {
+      // MOYEN: pourcentages simples, proportionnalité ×3, ×4
+      const sub = randInt(1,2);
+      if (sub === 1) {
+        const pct = [10,20,25,50][randInt(0,3)];
+        const base = randInt(2,15) * 10;
+        const answer = (base*pct/100).toString();
+        const items = [`Un maillot de ${rTeam()}`,`Un billet ${rStade()}`];
+        return {
+          question: `${items[randInt(0,1)]} à ${base}€ soldé de ${pct}%. Combien de réduction ?`,
+          answer, type: 'input',
+          explanation: `${pct}/100 × ${base} = ${answer}€`
+        };
+      } else {
+        const x = randInt(2,5), y = randInt(5,20), k = randInt(2,4);
+        return {
+          question: `${x} places ${rStade()} coûtent ${y}€. Prix de ${x*k} places ?`,
+          answer: (y*k).toString(), type: 'input',
+          explanation: `${x*k} ÷ ${x} = ${k}, donc ${y} × ${k} = ${y*k}€`
+        };
+      }
     } else {
+      // DUR: produit en croix, pourcentages plus durs
       const goals = randInt(3,12), matches = randInt(5,15);
       const targetMatches = matches * randInt(2,4);
-      const answer = Math.round(goals * targetMatches / matches).toString();
+      const answer = Math.round(goals*targetMatches/matches).toString();
       return {
         question: `${rPlayer()} marque ${goals} buts en ${matches} matchs avec ${rTeam()}. Combien en ${targetMatches} matchs ?`,
         answer, type: 'input',
@@ -1020,30 +1151,50 @@ const generators = {
   },
 
   statistiques() {
-    const type = randInt(1, 3);
-    const n = randInt(4, 7);
-    const vals = Array.from({length:n}, () => randInt(0, 5));
+    const d = getDiff();
     const player = rPlayer();
-    if (type === 1) {
-      const sum = vals.reduce((a,b) => a+b, 0);
-      const mean = sum / n;
-      const answer = Number.isInteger(mean) ? mean.toString() : mean.toFixed(1);
+    if (d === 1) {
+      // FACILE: moyenne de 3 petits nombres entiers (résultat entier)
+      const vals = [2, 4, 6]; // moyenne = 4
+      const picks = [[1,2,3],[2,4,6],[3,3,6],[1,3,2],[4,2,4],[2,6,4],[5,3,4]];
+      const v = picks[randInt(0,picks.length-1)];
+      const sum = v.reduce((a,b)=>a+b,0);
+      const answer = (sum/v.length).toString();
       return {
-        question: `Buts de ${player} par match : ${vals.join(', ')}. Quelle est sa moyenne ?`,
+        question: `Buts de ${player} : ${v.join(', ')}. Quelle est la moyenne ?`,
+        hint: 'Additionne tout puis divise par le nombre de matchs',
         answer, type: 'input',
-        explanation: `(${vals.join(' + ')}) ÷ ${n} = ${sum} ÷ ${n} = ${answer}`
+        explanation: `(${v.join(' + ')}) ÷ ${v.length} = ${sum} ÷ ${v.length} = ${answer}`
       };
-    } else if (type === 2) {
-      const sorted = [...vals].sort((a,b) => a-b);
-      const etendue = sorted[sorted.length-1] - sorted[0];
-      return {
-        question: `Buts de ${player} par match : ${vals.join(', ')}. Quelle étendue ?`,
-        hint: 'Étendue = max - min',
-        answer: etendue.toString(), type: 'input',
-        explanation: `Max = ${sorted[sorted.length-1]}, Min = ${sorted[0]}, Étendue = ${etendue}`
-      };
+    } else if (d === 2) {
+      // MOYEN: moyenne ou étendue de 4-5 valeurs
+      const n = randInt(4,5);
+      const vals = Array.from({length:n}, () => randInt(0,5));
+      const sub = randInt(1,2);
+      if (sub === 1) {
+        const sum = vals.reduce((a,b)=>a+b,0);
+        const mean = sum/n;
+        const answer = Number.isInteger(mean) ? mean.toString() : mean.toFixed(1);
+        return {
+          question: `Buts de ${player} par match : ${vals.join(', ')}. Moyenne ?`,
+          answer, type: 'input',
+          explanation: `(${vals.join(' + ')}) ÷ ${n} = ${sum} ÷ ${n} = ${answer}`
+        };
+      } else {
+        const sorted = [...vals].sort((a,b)=>a-b);
+        const etendue = sorted[sorted.length-1]-sorted[0];
+        return {
+          question: `Buts de ${player} par match : ${vals.join(', ')}. Étendue ?`,
+          hint: 'Étendue = max - min',
+          answer: etendue.toString(), type: 'input',
+          explanation: `Max = ${sorted[sorted.length-1]}, Min = ${sorted[0]}, Étendue = ${etendue}`
+        };
+      }
     } else {
-      const sorted = [...vals].sort((a,b) => a-b);
+      // DUR: médiane, plus de valeurs
+      const n = randInt(5,7);
+      const vals = Array.from({length:n}, () => randInt(0,5));
+      const sorted = [...vals].sort((a,b)=>a-b);
       const mid = Math.floor(sorted.length/2);
       const mediane = sorted.length%2===1 ? sorted[mid] : (sorted[mid-1]+sorted[mid])/2;
       const answer = Number.isInteger(mediane) ? mediane.toString() : mediane.toFixed(1);
@@ -1057,65 +1208,117 @@ const generators = {
   },
 
   equations() {
-    const type = randInt(1, 3);
-    if (type === 1) {
-      const a = randInt(2,9), x = randInt(-8,8), b = randInt(1,15);
-      const c = a*x + b;
+    const d = getDiff();
+    if (d === 1) {
+      // FACILE: x + a = b ou a × x = b (résultat positif petit)
+      const sub = randInt(1,2);
+      if (sub === 1) {
+        const x = randInt(1,10), b = randInt(1,10);
+        return {
+          question: `Résous : x + ${b} = ${x+b}`,
+          hint: 'Quel nombre + ' + b + ' donne ' + (x+b) + ' ?',
+          answer: x.toString(), type: 'input',
+          explanation: `x = ${x+b} - ${b} = ${x}`
+        };
+      } else {
+        const a = randInt(2,5), x = randInt(1,10);
+        return {
+          question: `Résous : ${a} × x = ${a*x}`,
+          hint: `${a} fois combien = ${a*x} ?`,
+          answer: x.toString(), type: 'input',
+          explanation: `x = ${a*x} ÷ ${a} = ${x}`
+        };
+      }
+    } else if (d === 2) {
+      // MOYEN: ax + b = c (résultat positif)
+      const a = randInt(2,5), x = randInt(1,8), b = randInt(1,10);
+      const c = a*x+b;
       return {
         question: `Résous : ${a}x + ${b} = ${c}`,
         answer: x.toString(), type: 'input',
         explanation: `${a}x = ${c} - ${b} = ${c-b}, x = ${c-b}/${a} = ${x}`
       };
-    } else if (type === 2) {
-      const a = randInt(3,9), c = randInt(1, a-1), x = randInt(-5,5), b = randInt(1,10);
-      const d = (a-c)*x + b;
-      return {
-        question: `Résous : ${a}x + ${b} = ${c}x + ${d}`,
-        answer: x.toString(), type: 'input',
-        explanation: `${a-c}x = ${d-b} → x = ${x}`
-      };
     } else {
-      const a = randInt(2,6), x = randInt(-6,6), b = randInt(1,8);
-      const c = a*(x+b);
-      return {
-        question: `Résous : ${a}(x + ${b}) = ${c}`,
-        answer: x.toString(), type: 'input',
-        explanation: `x + ${b} = ${c/a}, x = ${c/a} - ${b} = ${x}`
-      };
+      // DUR: ax + b = cx + d, parenthèses, résultats négatifs possibles
+      const sub = randInt(1,2);
+      if (sub === 1) {
+        const a = randInt(3,9), c = randInt(1,a-1), x = randInt(-5,5), b = randInt(1,10);
+        const dd = (a-c)*x+b;
+        return {
+          question: `Résous : ${a}x + ${b} = ${c}x + ${dd}`,
+          answer: x.toString(), type: 'input',
+          explanation: `${a-c}x = ${dd-b} → x = ${x}`
+        };
+      } else {
+        const a = randInt(2,6), x = randInt(-6,6), b = randInt(1,8);
+        const c = a*(x+b);
+        return {
+          question: `Résous : ${a}(x + ${b}) = ${c}`,
+          answer: x.toString(), type: 'input',
+          explanation: `x + ${b} = ${c/a}, x = ${c/a} - ${b} = ${x}`
+        };
+      }
     }
   },
 
   relatifs() {
-    const type = randInt(1, 4);
-    if (type === 1) {
-      const a = randInt(-15,15), b = randInt(-15,15);
-      return {
-        question: `Diff. de buts de ${rTeam()} : (${a}) + (${b}) = ?`,
-        answer: (a+b).toString(), type: 'input',
-        explanation: `${a} + (${b}) = ${a+b}`
-      };
-    } else if (type === 2) {
-      const a = randInt(-12,12), b = randInt(-12,12);
-      return {
-        question: `Classement : (${a}) - (${b}) = ?`,
-        answer: (a-b).toString(), type: 'input',
-        explanation: `${a} - (${b}) = ${a} + (${-b}) = ${a-b}`
-      };
-    } else if (type === 3) {
-      let a = randInt(-9,9), b = randInt(-9,9);
-      if (a===0||b===0) return generators.relatifs();
-      return {
-        question: `Calcule : (${a}) × (${b})`,
-        answer: (a*b).toString(), type: 'input',
-        explanation: `${Math.abs(a)} × ${Math.abs(b)} = ${Math.abs(a*b)}. ${(a>0)===(b>0)?'Même signe → +':'Signes diff. → -'} → ${a*b}`
-      };
+    const d = getDiff();
+    if (d === 1) {
+      // FACILE: addition de petits relatifs, un seul négatif
+      const sub = randInt(1,2);
+      if (sub === 1) {
+        const a = randInt(1,10), b = randInt(1, a-1 || 1);
+        return {
+          question: `Calcule : ${a} + (−${b}) = ?`,
+          hint: 'Ajouter un négatif = soustraire',
+          answer: (a-b).toString(), type: 'input',
+          explanation: `${a} + (−${b}) = ${a} − ${b} = ${a-b}`
+        };
+      } else {
+        const a = randInt(1,8), b = randInt(1,8);
+        return {
+          question: `Diff. de buts de ${rTeam()} : ${a} − ${b} = ?`,
+          answer: (a-b).toString(), type: 'input',
+          explanation: `${a} − ${b} = ${a-b}`
+        };
+      }
+    } else if (d === 2) {
+      // MOYEN: additions/soustractions avec négatifs
+      const sub = randInt(1,2);
+      if (sub === 1) {
+        const a = randInt(-10,10), b = randInt(-10,10);
+        return {
+          question: `Diff. de buts de ${rTeam()} : (${a}) + (${b}) = ?`,
+          answer: (a+b).toString(), type: 'input',
+          explanation: `${a} + (${b}) = ${a+b}`
+        };
+      } else {
+        const a = randInt(-8,8), b = randInt(-8,8);
+        return {
+          question: `Classement : (${a}) − (${b}) = ?`,
+          answer: (a-b).toString(), type: 'input',
+          explanation: `${a} − (${b}) = ${a} + (${-b}) = ${a-b}`
+        };
+      }
     } else {
-      const a = randInt(-9,-1), b = randInt(-9,-1), c = randInt(-9,-1);
-      return {
-        question: `Calcule : (${a}) × (${b}) × (${c})`,
-        answer: (a*b*c).toString(), type: 'input',
-        explanation: `3 négatifs (impair) → résultat négatif. ${Math.abs(a)}×${Math.abs(b)}×${Math.abs(c)} = ${Math.abs(a*b*c)} → ${a*b*c}`
-      };
+      // DUR: multiplications, triple produit
+      const sub = randInt(1,2);
+      if (sub === 1) {
+        let a = randInt(-9,9), b = randInt(-9,9);
+        if (a===0||b===0) return generators.relatifs();
+        return {
+          question: `Calcule : (${a}) × (${b})`,
+          answer: (a*b).toString(), type: 'input',
+          explanation: `${Math.abs(a)} × ${Math.abs(b)} = ${Math.abs(a*b)}. ${(a>0)===(b>0)?'Même signe → +':'Signes diff. → −'} → ${a*b}`
+        };
+      } else {
+        const a = randInt(-7,-1), b = randInt(-7,-1), c = randInt(-7,-1);
+        return {
+          question: `Calcule : (${a}) × (${b}) × (${c})`,
+          answer: (a*b*c).toString(), type: 'input',
+          explanation: `3 négatifs (impair) → négatif. ${Math.abs(a)}×${Math.abs(b)}×${Math.abs(c)} = ${Math.abs(a*b*c)} → ${a*b*c}`
+        };
+      }
     }
   }
 };
