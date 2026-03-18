@@ -762,26 +762,59 @@ const ACHIEVEMENTS = [
 ];
 
 const OL_LOGO = 'https://tmssl.akamaized.net/images/wappen/head/1041.png';
-const CLUB_LOGOS = {
-  real:  'https://tmssl.akamaized.net/images/wappen/head/418.png',
-  barca: 'https://tmssl.akamaized.net/images/wappen/head/131.png',
-  city:  'https://tmssl.akamaized.net/images/wappen/head/281.png',
-  bayern:'https://tmssl.akamaized.net/images/wappen/head/27.png',
-  psg:   'https://tmssl.akamaized.net/images/wappen/head/583.png',
-  juve:  'https://tmssl.akamaized.net/images/wappen/head/506.png',
-  liver: 'https://tmssl.akamaized.net/images/wappen/head/31.png',
-  inter: 'https://tmssl.akamaized.net/images/wappen/head/46.png',
+// Transfermarkt club IDs for logos
+const TM = id => `https://tmssl.akamaized.net/images/wappen/head/${id}.png`;
+const CLUBS = {
+  // Faibles (souvent éliminés en poules 2019-2024)
+  celtic:    TM(371),   // Celtic Glasgow
+  bruges:    TM(2282),  // Club Bruges
+  salzburg:  TM(3869),  // RB Salzbourg
+  celtic2:   TM(371),
+  galata:    TM(141),   // Galatasaray
+  copenhagen:TM(1075),  // FC Copenhague
+  zagreb:    TM(419),   // Dinamo Zagreb
+  shakhtar:  TM(660),   // Shakhtar Donetsk
+  // Moyens (8es-quarts)
+  benfica:   TM(294),
+  porto:     TM(720),
+  ajax:      TM(610),
+  napoli:    TM(6195),
+  sevilla:   TM(368),
+  milan:     TM(5),     // AC Milan
+  arsenal:   TM(11),
+  dortmund:  TM(16),
+  // Forts (quarts-demi réguliers)
+  atletico:  TM(13),
+  inter:     TM(46),
+  juve:      TM(506),
+  chelsea:   TM(631),
+  psg:       TM(583),
+  bayern:    TM(27),
+  // Très forts (finalistes/vainqueurs)
+  city:      TM(281),
+  barca:     TM(131),
+  liver:     TM(31),
+  real:      TM(418),
 };
 
+// 5 adversaires par thème, du plus faible au plus fort (basé sur les perfs UCL 2019-2024)
 const TOPICS = [
-  { id:'calcul_litteral', emoji:'📝', name:'Calcul littéral', desc:'Développer, factoriser, réduire', diff:'moyen', foot:'Dribble technique', opponent:'real' },
-  { id:'fractions', emoji:'🍕', name:'Fractions', desc:'Opérations sur les fractions', diff:'moyen', foot:'Passes millimétrées', opponent:'barca' },
-  { id:'puissances', emoji:'⚡', name:'Puissances', desc:'Règles de calcul des puissances', diff:'moyen', foot:'Frappes puissantes', opponent:'city' },
-  { id:'pythagore', emoji:'📐', name:'Pythagore', desc:'Théorème de Pythagore', diff:'difficile', foot:'Angles de tir', opponent:'bayern' },
-  { id:'proportionnalite', emoji:'⚖️', name:'Proportionnalité', desc:'Pourcentages, échelles', diff:'facile', foot:'Statistiques d\'équipe', opponent:'psg' },
-  { id:'statistiques', emoji:'📊', name:'Statistiques', desc:'Moyenne, médiane, étendue', diff:'facile', foot:'Analyse de match', opponent:'juve' },
-  { id:'equations', emoji:'🔍', name:'Équations', desc:'Résoudre des équations', diff:'difficile', foot:'Stratégie tactique', opponent:'liver' },
-  { id:'relatifs', emoji:'➕', name:'Nombres relatifs', desc:'Opérations avec les relatifs', diff:'facile', foot:'Différence de buts', opponent:'inter' },
+  { id:'calcul_litteral', emoji:'📝', name:'Calcul littéral', desc:'Développer, factoriser, réduire', foot:'Dribble technique',
+    opponents:['celtic','benfica','atletico','psg','real'] },
+  { id:'fractions', emoji:'🍕', name:'Fractions', desc:'Opérations sur les fractions', foot:'Passes millimétrées',
+    opponents:['bruges','porto','inter','bayern','barca'] },
+  { id:'puissances', emoji:'⚡', name:'Puissances', desc:'Règles de calcul des puissances', foot:'Frappes puissantes',
+    opponents:['salzburg','ajax','juve','city','real'] },
+  { id:'pythagore', emoji:'📐', name:'Pythagore', desc:'Théorème de Pythagore', foot:'Angles de tir',
+    opponents:['galata','napoli','chelsea','liver','bayern'] },
+  { id:'proportionnalite', emoji:'⚖️', name:'Proportionnalité', desc:'Pourcentages, échelles', foot:'Statistiques d\'équipe',
+    opponents:['copenhagen','sevilla','psg','barca','city'] },
+  { id:'statistiques', emoji:'📊', name:'Statistiques', desc:'Moyenne, médiane, étendue', foot:'Analyse de match',
+    opponents:['zagreb','milan','dortmund','inter','liver'] },
+  { id:'equations', emoji:'🔍', name:'Équations', desc:'Résoudre des équations', foot:'Stratégie tactique',
+    opponents:['shakhtar','arsenal','atletico','bayern','real'] },
+  { id:'relatifs', emoji:'➕', name:'Nombres relatifs', desc:'Opérations avec les relatifs', foot:'Différence de buts',
+    opponents:['celtic','benfica','juve','city','barca'] },
 ];
 
 // ══════════════════════════════════════
@@ -1707,7 +1740,6 @@ function updateUI() {
   const grid = document.getElementById('topicsGrid');
   grid.innerHTML = '';
   TOPICS.forEach(t => {
-    const oppLogo = CLUB_LOGOS[t.opponent] || '';
     const unlockedPhase = (state.topicPhases && state.topicPhases[t.id]) || 0;
 
     // Topic header
@@ -1716,11 +1748,13 @@ function updateUI() {
     header.innerHTML = `<span style="font-size:20px">${t.emoji}</span> ${t.name} <span style="font-size:11px;color:var(--text2);font-weight:400;">— ${t.foot}</span>`;
     grid.appendChild(header);
 
-    // Phase cards for this topic
+    // Phase cards for this topic — each phase has its own opponent
     PHASES.forEach((phase, pi) => {
       const locked = pi > unlockedPhase;
       const phaseKey = t.id + '_' + pi;
       const sc = (state.phaseScores && state.phaseScores[phaseKey]) || null;
+      const oppKey = t.opponents[pi] || t.opponents[t.opponents.length - 1];
+      const oppLogo = CLUBS[oppKey] || '';
       const card = document.createElement('div');
       card.className = 'topic-card';
       card.style.opacity = locked ? '0.4' : '1';
