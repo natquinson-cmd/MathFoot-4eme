@@ -1830,7 +1830,7 @@ function updateUI() {
     TOPICS.forEach(t => {
       if (!LESSONS[t.id]) return;
       // Determine difficulty level from match progress
-      const prog = state.matchProgress[t.id] || 0;
+      const prog = (state.topicPhases && state.topicPhases[t.id]) || 0;
       let diffLabel, diffClass;
       if (prog <= 1) { diffLabel = 'Facile'; diffClass = 'facile'; }
       else if (prog <= 3) { diffLabel = 'Moyen'; diffClass = 'moyen'; }
