@@ -182,10 +182,14 @@
   .match-score-display .ml { color: var(--red); }
   .match-score-display .no-score { color: var(--text2); font-size: 13px; font-weight: 600; letter-spacing: 0; }
   .match-info {
-    text-align: center; font-size: 11px; color: var(--text2); margin-bottom: 4px;
+    text-align: center; font-size: 11px; color: var(--text2); margin-bottom: 6px;
   }
+  .match-info .match-emoji { font-size: 22px; margin-right: 6px; vertical-align: middle; }
   .match-info .match-chapter {
-    font-size: 13px; font-weight: 700; color: var(--text);
+    font-size: 16px; font-weight: 800; color: #fff;
+  }
+  .match-info .match-desc {
+    display: block; font-size: 12px; color: var(--text2); margin-top: 2px;
   }
   .match-info .difficulty {
     display: inline-block; font-size: 10px; font-weight: 600;
@@ -195,7 +199,12 @@
   .diff-moyen { background: rgba(0,229,255,0.12); color: var(--blue); }
   .diff-difficile { background: rgba(212,175,55,0.15); color: var(--gold); }
 
-  /* Legacy topic-card fields hidden */
+  /* Cours cards: show emoji, name, description */
+  .cours-grid .topic-card { padding: 20px; text-align: center; }
+  .cours-grid .topic-card .emoji { font-size: 36px; margin-bottom: 10px; display: block; }
+  .cours-grid .topic-card h3 { font-size: 16px; font-weight: 700; margin-bottom: 4px; display: block; }
+  .cours-grid .topic-card > p { font-size: 12px; color: var(--text2); margin-bottom: 10px; display: block; }
+  /* Match cards: hide old fields */
   .topic-card .emoji, .topic-card .best-score { display: none; }
   .topic-card h3, .topic-card > p { display: none; }
   .topic-progress { display: none; }
@@ -581,7 +590,7 @@
   </div>
 
   <!-- ═══ HOME ═══ -->
-  <div class="screen active" id="screenHome">
+  <div class="screen" id="screenHome">
     <div class="welcome-banner">
       <h1>Math<span class="foot">Champions</span> ⭐</h1>
       <p>Remporte la Ligue des Champions des Maths !</p>
@@ -688,7 +697,7 @@
   </div>
 
   <!-- ═══ COURS MENU ═══ -->
-  <div class="screen" id="screenCours">
+  <div class="screen active" id="screenCours">
     <div class="welcome-banner">
       <h1>📖 Académie <span class="foot">Champions</span></h1>
       <p>Maîtrise les tactiques avant d'entrer sur le terrain !</p>
@@ -701,10 +710,10 @@
 
 <!-- BOTTOM NAV -->
 <div class="bottom-nav">
-  <button class="nav-btn" onclick="showScreen('screenCours')" id="navCours">
+  <button class="nav-btn active" onclick="showScreen('screenCours')" id="navCours">
     <span class="nav-icon">🏋️</span><span class="nav-label">Entraînement</span>
   </button>
-  <button class="nav-btn active" onclick="showScreen('screenHome')" id="navHome">
+  <button class="nav-btn" onclick="showScreen('screenHome')" id="navHome">
     <span class="nav-icon">⚽</span><span class="nav-label">Match</span>
   </button>
   <button class="nav-btn" onclick="showScreen('screenStats')" id="navStats">
@@ -765,14 +774,14 @@ const CLUB_LOGOS = {
 };
 
 const TOPICS = [
-  { id:'calcul_litteral', name:'Calcul littéral', desc:'Développer, factoriser, réduire', diff:'moyen', foot:'Dribble technique', opponent:'real' },
-  { id:'fractions', name:'Fractions', desc:'Opérations sur les fractions', diff:'moyen', foot:'Passes millimétrées', opponent:'barca' },
-  { id:'puissances', name:'Puissances', desc:'Règles de calcul des puissances', diff:'moyen', foot:'Frappes puissantes', opponent:'city' },
-  { id:'pythagore', name:'Pythagore', desc:'Théorème de Pythagore', diff:'difficile', foot:'Angles de tir', opponent:'bayern' },
-  { id:'proportionnalite', name:'Proportionnalité', desc:'Pourcentages, échelles', diff:'facile', foot:'Statistiques d\'équipe', opponent:'psg' },
-  { id:'statistiques', name:'Statistiques', desc:'Moyenne, médiane, étendue', diff:'facile', foot:'Analyse de match', opponent:'juve' },
-  { id:'equations', name:'Équations', desc:'Résoudre des équations', diff:'difficile', foot:'Stratégie tactique', opponent:'liver' },
-  { id:'relatifs', name:'Nombres relatifs', desc:'Opérations avec les relatifs', diff:'facile', foot:'Différence de buts', opponent:'inter' },
+  { id:'calcul_litteral', emoji:'📝', name:'Calcul littéral', desc:'Développer, factoriser, réduire', diff:'moyen', foot:'Dribble technique', opponent:'real' },
+  { id:'fractions', emoji:'🍕', name:'Fractions', desc:'Opérations sur les fractions', diff:'moyen', foot:'Passes millimétrées', opponent:'barca' },
+  { id:'puissances', emoji:'⚡', name:'Puissances', desc:'Règles de calcul des puissances', diff:'moyen', foot:'Frappes puissantes', opponent:'city' },
+  { id:'pythagore', emoji:'📐', name:'Pythagore', desc:'Théorème de Pythagore', diff:'difficile', foot:'Angles de tir', opponent:'bayern' },
+  { id:'proportionnalite', emoji:'⚖️', name:'Proportionnalité', desc:'Pourcentages, échelles', diff:'facile', foot:'Statistiques d\'équipe', opponent:'psg' },
+  { id:'statistiques', emoji:'📊', name:'Statistiques', desc:'Moyenne, médiane, étendue', diff:'facile', foot:'Analyse de match', opponent:'juve' },
+  { id:'equations', emoji:'🔍', name:'Équations', desc:'Résoudre des équations', diff:'difficile', foot:'Stratégie tactique', opponent:'liver' },
+  { id:'relatifs', emoji:'➕', name:'Nombres relatifs', desc:'Opérations avec les relatifs', diff:'facile', foot:'Différence de buts', opponent:'inter' },
 ];
 
 // ══════════════════════════════════════
@@ -1643,7 +1652,10 @@ function updateUI() {
     card.className = 'topic-card';
     card.onclick = () => startQuiz(t.id);
     card.innerHTML = `
-      <div class="match-info"><span class="match-chapter">${t.name}</span></div>
+      <div class="match-info">
+        <span class="match-emoji">${t.emoji}</span><span class="match-chapter">${t.name}</span>
+        <span class="match-desc">${t.foot}</span>
+      </div>
       <div class="match-row">
         <img class="match-logo" src="${OL_LOGO}" alt="OL">
         <div class="match-score-display">
@@ -1668,6 +1680,7 @@ function updateUI() {
       card.innerHTML = `
         <div class="emoji">${t.emoji}</div>
         <h3>${t.name}</h3>
+        <p>${t.desc}</p>
         <p>📖 ${LESSONS[t.id].length} étapes</p>
         <span class="difficulty diff-${t.diff}">${t.diff}</span>
       `;
