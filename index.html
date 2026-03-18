@@ -234,6 +234,21 @@
   }
   .cours-steps { font-size: 12px; color: var(--text2); }
   .lock-msg { font-size: 10px; color: var(--text2); }
+  .cours-level-card.done {
+    border-color: rgba(0,230,118,0.3); background: rgba(0,230,118,0.05);
+  }
+  .cours-progress-bar {
+    position: relative; height: 8px; background: rgba(255,255,255,0.08);
+    border-radius: 4px; margin-bottom: 20px; overflow: visible;
+  }
+  .cours-progress-fill {
+    height: 100%; background: linear-gradient(90deg, var(--green), var(--blue));
+    border-radius: 4px; transition: width 0.5s;
+  }
+  .cours-progress-label {
+    position: absolute; right: 0; top: -18px; font-size: 11px;
+    color: var(--text2); font-weight: 600;
+  }
   /* Match cards: hide old fields */
   .topic-card .emoji, .topic-card .best-score { display: none; }
   .topic-card h3, .topic-card > p { display: none; }
@@ -827,6 +842,13 @@ const ACHIEVEMENTS = [
   { id:'speed', icon:'⚡', name:'Frappe éclair', desc:'But en moins de 3s comme Mbappé', check: s => s.fastAnswer },
   { id:'all_topics', icon:'🌍', name:'Complet', desc:'Joue tous les matchs de poule', check: s => s.topicsPlayed >= TOPICS.length },
   { id:'level_5', icon:'👑', name:'Demi-finaliste', desc:'Atteins les demi-finales UCL', check: s => s.level >= 5 },
+  // Training achievements
+  { id:'first_lesson', icon:'📖', name:'Premier entraînement', desc:'Termine ton premier cours', check: s => Object.keys(s.lessonsCompleted||{}).length >= 1 },
+  { id:'lessons_10', icon:'🏋️', name:'Assidu', desc:'10 cours terminés — quel travail !', check: s => Object.keys(s.lessonsCompleted||{}).length >= 10 },
+  { id:'all_facile', icon:'🎓', name:'Académicien', desc:'Tous les cours Facile terminés', check: s => TOPICS.every(t => (s.lessonsCompleted||{})[t.id+'_facile']) },
+  { id:'all_moyen', icon:'🧠', name:'Tacticien', desc:'Tous les cours Moyen terminés', check: s => TOPICS.every(t => (s.lessonsCompleted||{})[t.id+'_moyen']) },
+  { id:'all_difficile', icon:'🎩', name:'Professeur', desc:'Tous les cours Difficile terminés', check: s => TOPICS.every(t => (s.lessonsCompleted||{})[t.id+'_difficile']) },
+  { id:'joueur_complet', icon:'🌟', name:'Joueur complet', desc:'Tous les cours ET matchs terminés !', check: s => TOPICS.every(t => (s.lessonsCompleted||{})[t.id+'_facile'] && (s.lessonsCompleted||{})[t.id+'_moyen'] && (s.lessonsCompleted||{})[t.id+'_difficile'] && (s.topicPhases||{})[t.id] >= 5) },
 ];
 
 const OL_LOGO = 'https://tmssl.akamaized.net/images/wappen/head/1041.png';
@@ -904,7 +926,9 @@ const STATE_DEFAULTS = {
   perfectQuizzes: 0, dailyCompleted: 0, fastAnswer: false,
   topicsPlayed: 0, topicsBest: {}, topicScores: {}, topicPhases: {}, phaseScores: {}, achievements: [],
   lastDaily: null, dailyStreak: 0, lastPlayDate: null,
-  topicsPlayedSet: []
+  topicsPlayedSet: [],
+  lessonsCompleted: {},   // { topicId_level: true }  e.g. { calcul_litteral_facile: true }
+  lessonExerciseStreak: {} // { topicId_level: count } perfect mini-exercises in current lesson
 };
 
 function loadState() {
@@ -1484,11 +1508,16 @@ function startQuiz(topicId, phaseIdx) {
   for (let i = 0; i < 10; i++) questions.push(generators[topicId]());
   _forcedDiff = 0;
 
+  // Check if any lesson completed for this topic → boost
+  const hasLessonBoost = state.lessonsCompleted &&
+    (state.lessonsCompleted[topicId+'_facile'] || state.lessonsCompleted[topicId+'_moyen'] || state.lessonsCompleted[topicId+'_difficile']);
+  const timeLimit = hasLessonBoost ? 65 : 60; // +5s boost
+
   quiz = {
     topic: topicId, questions, current: 0, score: 0, misses: 0,
     streak: 0, bestStreak: 0, xpEarned: 0, isDaily: false,
-    times: [], questionStart: 0, timerInterval: null, timeLimit: 60,
-    phase: phaseIdx
+    times: [], questionStart: 0, timerInterval: null, timeLimit,
+    phase: phaseIdx, hasLessonBoost: !!hasLessonBoost
   };
   if (!state.topicsPlayedSet.includes(topicId)) {
     state.topicsPlayedSet.push(topicId);
@@ -1498,6 +1527,7 @@ function startQuiz(topicId, phaseIdx) {
   showScreen('screenQuiz');
   const t = TOPICS.find(t => t.id === topicId);
   document.getElementById('quizTopicLabel').textContent = t ? `${phase.icon} ${t.name} — ${phase.name}` : 'Match du jour';
+  if (hasLessonBoost) showToast('⚡', 'Boost entraînement : +5s par tir !');
   updateLiveScore();
   showQuestion();
 }
@@ -1528,7 +1558,8 @@ function showQuestion() {
   const q = quiz.questions[quiz.current];
   document.getElementById('quizProgress').textContent = `Tir ${quiz.current+1} / ${quiz.questions.length}`;
   document.getElementById('qText').innerHTML = q.question;
-  document.getElementById('qHint').textContent = q.hint || '';
+  // Show hints only with lesson boost
+  document.getElementById('qHint').textContent = (quiz.hasLessonBoost && q.hint) ? '💡 ' + q.hint : '';
   document.getElementById('qLabel').textContent = `⚽ Tir n°${quiz.current+1}`;
   document.getElementById('explanationBox').classList.remove('visible');
   document.getElementById('nextBtnWrap').style.display = 'none';
@@ -1873,14 +1904,27 @@ function updateUI() {
         const steps = topicLessons[lv.key];
         if (!steps) return;
         const locked = prog < lv.unlock;
+        const doneKey = t.id + '_' + lv.key;
+        const isDone = state.lessonsCompleted && state.lessonsCompleted[doneKey];
         const card = document.createElement('div');
-        card.className = 'cours-level-card' + (locked ? ' locked' : '');
+        card.className = 'cours-level-card' + (locked ? ' locked' : '') + (isDone ? ' done' : '');
         if (!locked) card.onclick = () => startLesson(t.id, lv.key);
         card.innerHTML = locked
           ? `<span class="diff-badge diff-${lv.cls}">${lv.icon} ${lv.label}</span><span class="lock-msg">🔒 Gagne ${lv.unlock} matchs pour débloquer</span>`
-          : `<span class="diff-badge diff-${lv.cls}">${lv.icon} ${lv.label}</span><span class="cours-steps">📖 ${steps.length} étapes</span>`;
+          : `<span class="diff-badge diff-${lv.cls}">${lv.icon} ${lv.label}</span>
+             <span class="cours-steps">${isDone ? '✅ Terminé' : '📖 ' + steps.length + ' étapes'}</span>`;
         row.appendChild(card);
       });
+      // Progress bar for this topic
+      const completedCount = LEVELS.filter(lv => state.lessonsCompleted && state.lessonsCompleted[t.id + '_' + lv.key]).length;
+      const totalLevels = LEVELS.filter(lv => topicLessons[lv.key]).length;
+      if (totalLevels > 0) {
+        const progBar = document.createElement('div');
+        progBar.className = 'cours-progress-bar';
+        progBar.innerHTML = `<div class="cours-progress-fill" style="width:${completedCount/totalLevels*100}%"></div>
+          <span class="cours-progress-label">${completedCount}/${totalLevels} niveaux</span>`;
+        coursGrid.appendChild(progBar);
+      }
       coursGrid.appendChild(row);
     });
   }
@@ -4206,10 +4250,12 @@ function startLesson(topicId, level) {
   if (!topicLessons) { showToast('❌', 'Cours pas encore disponible'); return; }
   const steps = topicLessons[level];
   if (!steps) { showToast('❌', 'Ce niveau n\'est pas encore disponible'); return; }
-  lesson = { topicId, level, steps, current: 0 };
+  lesson = { topicId, level, steps, current: 0, exerciseCorrectFirst: 0, exerciseAttempted: {} };
   const t = TOPICS.find(t => t.id === topicId);
   const lvlLabel = level === 'facile' ? '🟢 Facile' : level === 'moyen' ? '🔵 Moyen' : '🟡 Difficile';
   document.getElementById('lessonTopicLabel').textContent = `📖 ${t ? t.name : topicId} — ${lvlLabel}`;
+  document.getElementById('lessonNextBtn').style.display = '';
+  document.getElementById('lessonPrevBtn').style.display = '';
   showScreen('screenLesson');
   renderLessonStep();
 }
@@ -4254,8 +4300,8 @@ function renderLessonStep() {
   document.getElementById('lessonPrevBtn').style.visibility = lesson.current === 0 ? 'hidden' : 'visible';
   const nextBtn = document.getElementById('lessonNextBtn');
   if (lesson.current >= total - 1) {
-    nextBtn.textContent = '⚽ Passer au match !';
-    nextBtn.onclick = () => startQuiz(lesson.topicId);
+    nextBtn.textContent = '✅ Terminer le cours';
+    nextBtn.onclick = () => finishLesson();
   } else {
     nextBtn.textContent = 'Suivant →';
     nextBtn.onclick = () => lessonNext();
@@ -4269,10 +4315,13 @@ function checkLessonAnswer(btn, idx, correctIdx) {
     if (i === correctIdx) b.classList.add('mini-correct');
     else if (i === idx && idx !== correctIdx) b.classList.add('mini-wrong');
   });
+  const stepKey = lesson.current;
+  const isFirstAttempt = !lesson.exerciseAttempted[stepKey];
+  lesson.exerciseAttempted[stepKey] = true;
   const feedback = document.getElementById('miniFeedback');
   if (idx === correctIdx) {
     feedback.innerHTML = '<span style="color:var(--green)">⚽ Correct ! Bien joué !</span>';
-    // Bonus XP for lesson exercises
+    if (isFirstAttempt) lesson.exerciseCorrectFirst = (lesson.exerciseCorrectFirst || 0) + 1;
     state.totalXp += 3;
     state.currentXp += 3;
     checkLevelUp();
@@ -4288,10 +4337,14 @@ function checkLessonInput(correctAnswer) {
   const val = input.value.trim().replace(',', '.');
   const feedback = document.getElementById('miniFeedback');
   const isCorrect = val === correctAnswer || val === correctAnswer.replace('.', ',');
+  const stepKey = lesson.current;
+  const isFirstAttempt = !lesson.exerciseAttempted[stepKey];
+  lesson.exerciseAttempted[stepKey] = true;
   input.disabled = true;
   if (isCorrect) {
     input.style.borderColor = 'var(--green)';
     feedback.innerHTML = '<span style="color:var(--green)">⚽ Correct ! Bien joué !</span>';
+    if (isFirstAttempt) lesson.exerciseCorrectFirst = (lesson.exerciseCorrectFirst || 0) + 1;
     state.totalXp += 3;
     state.currentXp += 3;
     checkLevelUp();
@@ -4328,6 +4381,62 @@ function lessonPrev() {
     lesson.current--;
     renderLessonStep();
     window.scrollTo({ top: 0, behavior: 'smooth' });
+  }
+}
+
+function finishLesson() {
+  const key = lesson.topicId + '_' + lesson.level;
+  if (!state.lessonsCompleted) state.lessonsCompleted = {};
+  const alreadyDone = state.lessonsCompleted[key];
+
+  if (!alreadyDone) {
+    // XP reward based on level
+    const xpReward = lesson.level === 'facile' ? 30 : lesson.level === 'moyen' ? 50 : 80;
+    // Bonus if all mini-exercises correct first try
+    const perfKey = key;
+    const totalExercises = lesson.steps.filter(s => s.exercise).length;
+    const correctFirst = (lesson.exerciseCorrectFirst || 0);
+    const isPerfect = totalExercises > 0 && correctFirst >= totalExercises;
+    const bonus = isPerfect ? 20 : 0;
+    const totalXpGained = xpReward + bonus;
+
+    state.totalXp += totalXpGained;
+    state.currentXp += totalXpGained;
+    state.lessonsCompleted[key] = true;
+    checkLevelUp();
+    checkAchievements();
+    saveState();
+
+    // Show completion screen
+    const t = TOPICS.find(t => t.id === lesson.topicId);
+    const lvlLabel = lesson.level === 'facile' ? '🟢 Facile' : lesson.level === 'moyen' ? '🔵 Moyen' : '🟡 Difficile';
+    const container = document.getElementById('lessonContent');
+    container.innerHTML = `
+      <div class="lesson-card" style="text-align:center;">
+        <div style="font-size:60px;margin-bottom:16px;">🎉</div>
+        <h2>Cours terminé !</h2>
+        <p style="margin:12px 0;color:var(--text2);">${t ? t.name : ''} — ${lvlLabel}</p>
+        <div style="font-size:28px;font-weight:800;color:var(--gold);margin:16px 0;">+${totalXpGained} XP</div>
+        <div style="font-size:14px;color:var(--text2);margin-bottom:8px;">
+          ${xpReward} XP (cours) ${bonus > 0 ? `+ ${bonus} XP (sans faute ⭐)` : ''}
+        </div>
+        ${isPerfect ? '<div style="color:var(--green);font-weight:700;margin:8px 0;">⭐ Tous les exercices réussis du 1er coup !</div>' : ''}
+        <div style="background:rgba(0,229,255,0.1);border-radius:12px;padding:12px;margin:16px 0;text-align:left;">
+          <div style="font-weight:700;color:var(--blue);margin-bottom:6px;">⚡ Bonus Match activé !</div>
+          <div style="font-size:13px;color:var(--text2);">Tu gagnes <strong>+5 secondes</strong> par question et un <strong>indice</strong> dans les matchs de ${t ? t.name : ''} !</div>
+        </div>
+        <div style="display:flex;gap:10px;justify-content:center;margin-top:20px;">
+          <button class="btn btn-primary" onclick="showScreen('screenCours')">📚 Autres cours</button>
+          <button class="btn btn-primary" onclick="startQuiz('${lesson.topicId}')">⚽ Jouer un match</button>
+        </div>
+      </div>`;
+    document.getElementById('lessonNextBtn').style.display = 'none';
+    document.getElementById('lessonPrevBtn').style.display = 'none';
+    updateTopBarOnly();
+  } else {
+    // Already completed — just go back
+    showToast('✅', 'Cours déjà terminé !');
+    showScreen('screenCours');
   }
 }
 
