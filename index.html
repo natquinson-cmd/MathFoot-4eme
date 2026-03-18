@@ -166,12 +166,21 @@
     box-shadow: 0 8px 24px rgba(212,175,55,0.15);
   }
   .match-row {
-    display: flex; align-items: center; justify-content: center; gap: 12px;
-    margin-bottom: 8px;
+    display: flex; align-items: center; justify-content: center; gap: 10px;
+    margin-bottom: 4px;
+  }
+  .match-team {
+    display: flex; flex-direction: column; align-items: center; gap: 4px;
+    min-width: 70px;
   }
   .match-logo {
-    width: 40px; height: 40px; object-fit: contain;
+    width: 36px; height: 36px; object-fit: contain;
     border-radius: 4px; background: rgba(255,255,255,0.05); padding: 2px;
+  }
+  .match-team-name {
+    font-size: 11px; font-weight: 600; color: var(--text);
+    text-align: center; white-space: nowrap; overflow: hidden;
+    text-overflow: ellipsis; max-width: 80px;
   }
   .match-score-display {
     font-size: 24px; font-weight: 900; letter-spacing: 3px;
@@ -765,36 +774,31 @@ const OL_LOGO = 'https://tmssl.akamaized.net/images/wappen/head/1041.png';
 // Transfermarkt club IDs for logos
 const TM = id => `https://tmssl.akamaized.net/images/wappen/head/${id}.png`;
 const CLUBS = {
-  // Faibles (souvent éliminés en poules 2019-2024)
-  celtic:    TM(371),   // Celtic Glasgow
-  bruges:    TM(2282),  // Club Bruges
-  salzburg:  TM(3869),  // RB Salzbourg
-  celtic2:   TM(371),
-  galata:    TM(141),   // Galatasaray
-  copenhagen:TM(1075),  // FC Copenhague
-  zagreb:    TM(419),   // Dinamo Zagreb
-  shakhtar:  TM(660),   // Shakhtar Donetsk
-  // Moyens (8es-quarts)
-  benfica:   TM(294),
-  porto:     TM(720),
-  ajax:      TM(610),
-  napoli:    TM(6195),
-  sevilla:   TM(368),
-  milan:     TM(5),     // AC Milan
-  arsenal:   TM(11),
-  dortmund:  TM(16),
-  // Forts (quarts-demi réguliers)
-  atletico:  TM(13),
-  inter:     TM(46),
-  juve:      TM(506),
-  chelsea:   TM(631),
-  psg:       TM(583),
-  bayern:    TM(27),
-  // Très forts (finalistes/vainqueurs)
-  city:      TM(281),
-  barca:     TM(131),
-  liver:     TM(31),
-  real:      TM(418),
+  celtic:    { logo: TM(371),  name: 'Celtic' },
+  bruges:    { logo: TM(2282), name: 'Club Bruges' },
+  salzburg:  { logo: TM(3869), name: 'RB Salzbourg' },
+  galata:    { logo: TM(141),  name: 'Galatasaray' },
+  copenhagen:{ logo: TM(1075), name: 'FC Copenhague' },
+  zagreb:    { logo: TM(419),  name: 'Dinamo Zagreb' },
+  shakhtar:  { logo: TM(660),  name: 'Shakhtar' },
+  benfica:   { logo: TM(294),  name: 'Benfica' },
+  porto:     { logo: TM(720),  name: 'FC Porto' },
+  ajax:      { logo: TM(610),  name: 'Ajax' },
+  napoli:    { logo: TM(6195), name: 'Napoli' },
+  sevilla:   { logo: TM(368),  name: 'FC Séville' },
+  milan:     { logo: TM(5),    name: 'AC Milan' },
+  arsenal:   { logo: TM(11),   name: 'Arsenal' },
+  dortmund:  { logo: TM(16),   name: 'Dortmund' },
+  atletico:  { logo: TM(13),   name: 'Atlético' },
+  inter:     { logo: TM(46),   name: 'Inter Milan' },
+  juve:      { logo: TM(506),  name: 'Juventus' },
+  chelsea:   { logo: TM(631),  name: 'Chelsea' },
+  psg:       { logo: TM(583),  name: 'PSG' },
+  bayern:    { logo: TM(27),   name: 'Bayern' },
+  city:      { logo: TM(281),  name: 'Man City' },
+  barca:     { logo: TM(131),  name: 'FC Barcelone' },
+  liver:     { logo: TM(31),   name: 'Liverpool' },
+  real:      { logo: TM(418),  name: 'Real Madrid' },
 };
 
 // 5 adversaires par thème, du plus faible au plus fort (basé sur les perfs UCL 2019-2024)
@@ -1754,21 +1758,21 @@ function updateUI() {
       const phaseKey = t.id + '_' + pi;
       const sc = (state.phaseScores && state.phaseScores[phaseKey]) || null;
       const oppKey = t.opponents[pi] || t.opponents[t.opponents.length - 1];
-      const oppLogo = CLUBS[oppKey] || '';
+      const opp = CLUBS[oppKey] || { logo: '', name: '???' };
       const card = document.createElement('div');
       card.className = 'topic-card';
       card.style.opacity = locked ? '0.4' : '1';
       card.style.pointerEvents = locked ? 'none' : 'auto';
       if (!locked) card.onclick = () => startQuiz(t.id, pi);
       card.innerHTML = `
+        <div class="match-info">${phase.icon} ${phase.name}</div>
         <div class="match-row">
-          <img class="match-logo" src="${OL_LOGO}" alt="OL">
+          <div class="match-team"><img class="match-logo" src="${OL_LOGO}" alt="OL"><span class="match-team-name">OL</span></div>
           <div class="match-score-display">
             ${locked ? '<span class="no-score">🔒</span>' : sc ? `<span class="mg">${sc.goals}</span><span class="ms"> - </span><span class="ml">${sc.misses}</span>` : '<span class="no-score">À jouer</span>'}
           </div>
-          <img class="match-logo" src="${oppLogo}" alt="">
+          <div class="match-team"><img class="match-logo" src="${opp.logo}" alt="${opp.name}"><span class="match-team-name">${opp.name}</span></div>
         </div>
-        <div class="match-info">${phase.icon} ${phase.name}</div>
       `;
       grid.appendChild(card);
     });
