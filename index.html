@@ -668,9 +668,9 @@
         <div class="result-stat"><div class="val" id="resStreak" style="color:var(--gold)">0</div><div class="label">Meilleur enchaînement</div></div>
         <div class="result-stat"><div class="val" id="resTime" style="color:var(--blue)">0</div><div class="label">Temps moyen / tir</div></div>
       </div>
-      <div class="results-buttons">
+      <div class="results-buttons" id="resultsButtons">
         <button class="btn btn-primary" onclick="retryQuiz()">🔄 Revanche</button>
-        <button class="btn btn-secondary" onclick="showScreen('screenHome')">🏠 Vestiaires</button>
+        <button class="btn btn-secondary" onclick="showScreen('screenHome')">⚽ Matchs</button>
       </div>
     </div>
   </div>
@@ -806,7 +806,7 @@ const STATE_DEFAULTS = {
   totalXp: 0, level: 1, currentXp: 0,
   bestStreak: 0, totalSolved: 0, totalCorrect: 0,
   perfectQuizzes: 0, dailyCompleted: 0, fastAnswer: false,
-  topicsPlayed: 0, topicsBest: {}, topicScores: {}, achievements: [],
+  topicsPlayed: 0, topicsBest: {}, topicScores: {}, topicPhases: {}, phaseScores: {}, achievements: [],
   lastDaily: null, dailyStreak: 0, lastPlayDate: null,
   topicsPlayedSet: []
 };
@@ -844,8 +844,19 @@ function shuffle(arr) { for(let i=arr.length-1;i>0;i--){const j=randInt(0,i);[ar
 function gcd(a,b) { a=Math.abs(a); b=Math.abs(b); while(b){[a,b]=[b,a%b];} return a; }
 function simplifyFrac(n,d) { const g=gcd(n,d); return [n/g, d/g]; }
 
-// Difficulty: 1=easy (level 1-2), 2=medium (level 3-5), 3=hard (level 6+)
+// Match phases per topic (UCL rounds)
+const PHASES = [
+  { name: 'Phase de poules', diff: 1, minScore: 0, icon: '🏟️' },
+  { name: '8es de finale',   diff: 1, minScore: 5, icon: '⚔️' },
+  { name: 'Quarts de finale', diff: 2, minScore: 6, icon: '🔥' },
+  { name: 'Demi-finale',     diff: 2, minScore: 6, icon: '💫' },
+  { name: 'FINALE',          diff: 3, minScore: 7, icon: '🏆' },
+];
+
+// Difficulty: 1=easy, 2=medium, 3=hard. Can be overridden by phase.
+let _forcedDiff = 0;
 function getDiff() {
+  if (_forcedDiff) return _forcedDiff;
   if (state.level <= 2) return 1;
   if (state.level <= 5) return 2;
   return 3;
@@ -1365,13 +1376,23 @@ let quiz = {
   times: [], questionStart: 0, timerInterval: null, timeLimit: 60
 };
 
-function startQuiz(topicId) {
+function startQuiz(topicId, phaseIdx) {
+  // Determine phase
+  if (phaseIdx === undefined) {
+    phaseIdx = (state.topicPhases && state.topicPhases[topicId]) || 0;
+  }
+  const phase = PHASES[phaseIdx] || PHASES[0];
+  _forcedDiff = phase.diff;
+
   const questions = [];
   for (let i = 0; i < 10; i++) questions.push(generators[topicId]());
+  _forcedDiff = 0;
+
   quiz = {
     topic: topicId, questions, current: 0, score: 0, misses: 0,
     streak: 0, bestStreak: 0, xpEarned: 0, isDaily: false,
-    times: [], questionStart: 0, timerInterval: null, timeLimit: 60
+    times: [], questionStart: 0, timerInterval: null, timeLimit: 60,
+    phase: phaseIdx
   };
   if (!state.topicsPlayedSet.includes(topicId)) {
     state.topicsPlayedSet.push(topicId);
@@ -1380,7 +1401,7 @@ function startQuiz(topicId) {
   }
   showScreen('screenQuiz');
   const t = TOPICS.find(t => t.id === topicId);
-  document.getElementById('quizTopicLabel').textContent = t ? `${t.emoji} ${t.foot}` : 'Match du jour';
+  document.getElementById('quizTopicLabel').textContent = t ? `${phase.icon} ${t.name} — ${phase.name}` : 'Match du jour';
   updateLiveScore();
   showQuestion();
 }
@@ -1548,7 +1569,20 @@ function endQuiz() {
   if (quiz.topic !== 'daily') {
     const prev = state.topicsBest[quiz.topic] || 0;
     if (quiz.score > prev) state.topicsBest[quiz.topic] = quiz.score;
+    // Save phase score
+    const phaseKey = quiz.topic + '_' + quiz.phase;
+    state.phaseScores[phaseKey] = { goals: quiz.score, misses: quiz.misses };
     state.topicScores[quiz.topic] = { goals: quiz.score, misses: quiz.misses };
+    // Unlock next phase if score is enough
+    const currentPhase = quiz.phase;
+    const nextPhase = currentPhase + 1;
+    if (nextPhase < PHASES.length && quiz.score >= PHASES[nextPhase].minScore) {
+      const prevUnlocked = state.topicPhases[quiz.topic] || 0;
+      if (nextPhase > prevUnlocked) {
+        state.topicPhases[quiz.topic] = nextPhase;
+        showToast('🔓', `${PHASES[nextPhase].icon} ${PHASES[nextPhase].name} débloqué !`);
+      }
+    }
   }
 
   const today = new Date().toDateString();
@@ -1582,11 +1616,38 @@ function endQuiz() {
   document.getElementById('resStreak').textContent = quiz.bestStreak;
   document.getElementById('resTime').textContent = `${avgTime}s`;
 
+  // Show next match button if next phase is unlocked
+  const btns = document.getElementById('resultsButtons');
+  btns.innerHTML = '';
+  if (quiz.topic !== 'daily') {
+    const nextP = quiz.phase + 1;
+    const unlocked = (state.topicPhases[quiz.topic] || 0);
+    if (nextP < PHASES.length && nextP <= unlocked) {
+      const np = PHASES[nextP];
+      const b = document.createElement('button');
+      b.className = 'btn btn-primary';
+      b.textContent = `${np.icon} Match suivant : ${np.name}`;
+      b.onclick = () => startQuiz(quiz.topic, nextP);
+      btns.appendChild(b);
+    }
+  }
+  const retryBtn = document.createElement('button');
+  retryBtn.className = 'btn btn-secondary';
+  retryBtn.textContent = '🔄 Revanche';
+  retryBtn.onclick = () => retryQuiz();
+  btns.appendChild(retryBtn);
+
+  const homeBtn = document.createElement('button');
+  homeBtn.className = 'btn btn-secondary';
+  homeBtn.textContent = '⚽ Matchs';
+  homeBtn.onclick = () => showScreen('screenHome');
+  btns.appendChild(homeBtn);
+
   showScreen('screenResults');
 }
 
 function retryQuiz() {
-  if (quiz.topic === 'daily') startDaily(); else startQuiz(quiz.topic);
+  if (quiz.topic === 'daily') startDaily(); else startQuiz(quiz.topic, quiz.phase);
 }
 
 // ══════════════════════════════════════
@@ -1642,30 +1703,41 @@ function updateUI() {
   document.getElementById('nextXp').textContent = needed;
   document.getElementById('xpFill').style.width = (state.currentXp / needed * 100) + '%';
 
-  // Topics (UCL match cards)
+  // Topics (UCL match cards with phases)
   const grid = document.getElementById('topicsGrid');
   grid.innerHTML = '';
   TOPICS.forEach(t => {
-    const sc = (state.topicScores && state.topicScores[t.id]) || null;
     const oppLogo = CLUB_LOGOS[t.opponent] || '';
-    const card = document.createElement('div');
-    card.className = 'topic-card';
-    card.onclick = () => startQuiz(t.id);
-    card.innerHTML = `
-      <div class="match-info">
-        <span class="match-emoji">${t.emoji}</span><span class="match-chapter">${t.name}</span>
-        <span class="match-desc">${t.foot}</span>
-      </div>
-      <div class="match-row">
-        <img class="match-logo" src="${OL_LOGO}" alt="OL">
-        <div class="match-score-display">
-          ${sc ? `<span class="mg">${sc.goals}</span><span class="ms"> - </span><span class="ml">${sc.misses}</span>` : '<span class="no-score">À jouer</span>'}
+    const unlockedPhase = (state.topicPhases && state.topicPhases[t.id]) || 0;
+
+    // Topic header
+    const header = document.createElement('div');
+    header.style.cssText = 'font-size:15px;font-weight:800;color:#fff;margin-top:12px;margin-bottom:4px;display:flex;align-items:center;gap:6px;';
+    header.innerHTML = `<span style="font-size:20px">${t.emoji}</span> ${t.name} <span style="font-size:11px;color:var(--text2);font-weight:400;">— ${t.foot}</span>`;
+    grid.appendChild(header);
+
+    // Phase cards for this topic
+    PHASES.forEach((phase, pi) => {
+      const locked = pi > unlockedPhase;
+      const phaseKey = t.id + '_' + pi;
+      const sc = (state.phaseScores && state.phaseScores[phaseKey]) || null;
+      const card = document.createElement('div');
+      card.className = 'topic-card';
+      card.style.opacity = locked ? '0.4' : '1';
+      card.style.pointerEvents = locked ? 'none' : 'auto';
+      if (!locked) card.onclick = () => startQuiz(t.id, pi);
+      card.innerHTML = `
+        <div class="match-row">
+          <img class="match-logo" src="${OL_LOGO}" alt="OL">
+          <div class="match-score-display">
+            ${locked ? '<span class="no-score">🔒</span>' : sc ? `<span class="mg">${sc.goals}</span><span class="ms"> - </span><span class="ml">${sc.misses}</span>` : '<span class="no-score">À jouer</span>'}
+          </div>
+          <img class="match-logo" src="${oppLogo}" alt="">
         </div>
-        <img class="match-logo" src="${oppLogo}" alt="Adversaire">
-      </div>
-      <div class="match-info"><span class="difficulty diff-${t.diff}">${t.diff}</span></div>
-    `;
-    grid.appendChild(card);
+        <div class="match-info">${phase.icon} ${phase.name}</div>
+      `;
+      grid.appendChild(card);
+    });
   });
 
   // Cours grid
