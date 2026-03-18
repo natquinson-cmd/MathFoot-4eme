@@ -208,11 +208,32 @@
   .diff-moyen { background: rgba(0,229,255,0.12); color: var(--blue); }
   .diff-difficile { background: rgba(212,175,55,0.15); color: var(--gold); }
 
-  /* Cours cards: show emoji, name, description */
-  .cours-grid .topic-card { padding: 20px; text-align: center; }
-  .cours-grid .topic-card .emoji { font-size: 36px; margin-bottom: 10px; display: block; }
-  .cours-grid .topic-card h3 { font-size: 16px; font-weight: 700; margin-bottom: 4px; display: block; }
-  .cours-grid .topic-card > p { font-size: 12px; color: var(--text2); margin-bottom: 10px; display: block; }
+  /* Cours cards: topic header + 3 level cards */
+  .cours-topic-header {
+    font-size: 18px; font-weight: 800; color: var(--text); padding: 16px 0 8px;
+    border-bottom: 2px solid rgba(212,175,55,0.2); margin-bottom: 10px; margin-top: 8px;
+  }
+  .cours-topic-header .emoji { font-size: 22px; margin-right: 6px; }
+  .cours-level-row {
+    display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-bottom: 16px;
+  }
+  .cours-level-card {
+    background: var(--card); border: 2px solid rgba(255,255,255,0.08);
+    border-radius: 14px; padding: 16px 12px; text-align: center; cursor: pointer;
+    transition: all 0.2s; display: flex; flex-direction: column; align-items: center; gap: 8px;
+  }
+  .cours-level-card:hover:not(.locked) {
+    transform: translateY(-2px); border-color: var(--gold);
+    box-shadow: 0 6px 20px rgba(212,175,55,0.15);
+  }
+  .cours-level-card.locked {
+    opacity: 0.4; pointer-events: none;
+  }
+  .diff-badge {
+    font-size: 13px; font-weight: 700; padding: 4px 12px; border-radius: 10px;
+  }
+  .cours-steps { font-size: 12px; color: var(--text2); }
+  .lock-msg { font-size: 10px; color: var(--text2); }
   /* Match cards: hide old fields */
   .topic-card .emoji, .topic-card .best-score { display: none; }
   .topic-card h3, .topic-card > p { display: none; }
@@ -592,6 +613,10 @@
     .lesson-card h2 { font-size: 18px; }
     /* Back button */
     .back-btn { font-size: 13px; padding: 8px 12px; }
+    /* Cours levels on mobile */
+    .cours-level-row { grid-template-columns: 1fr; }
+    .cours-level-card { padding: 14px 10px; }
+    .diff-badge { font-size: 12px; }
   }
 </style>
 </head>
@@ -1827,25 +1852,36 @@ function updateUI() {
   const coursGrid = document.getElementById('coursGrid');
   if (coursGrid) {
     coursGrid.innerHTML = '';
+    const LEVELS = [
+      { key: 'facile', label: 'Facile', cls: 'facile', icon: '🟢', unlock: 0 },
+      { key: 'moyen', label: 'Moyen', cls: 'moyen', icon: '🔵', unlock: 2 },
+      { key: 'difficile', label: 'Difficile', cls: 'difficile', icon: '🟡', unlock: 4 }
+    ];
     TOPICS.forEach(t => {
-      if (!LESSONS[t.id]) return;
-      // Determine difficulty level from match progress
+      const topicLessons = LESSONS[t.id];
+      if (!topicLessons) return;
       const prog = (state.topicPhases && state.topicPhases[t.id]) || 0;
-      let diffLabel, diffClass;
-      if (prog <= 1) { diffLabel = 'Facile'; diffClass = 'facile'; }
-      else if (prog <= 3) { diffLabel = 'Moyen'; diffClass = 'moyen'; }
-      else { diffLabel = 'Difficile'; diffClass = 'difficile'; }
-      const card = document.createElement('div');
-      card.className = 'topic-card';
-      card.onclick = () => startLesson(t.id);
-      card.innerHTML = `
-        <div class="emoji">${t.emoji}</div>
-        <h3>${t.name}</h3>
-        <p>${t.desc}</p>
-        <p>📖 ${LESSONS[t.id].length} étapes</p>
-        <span class="difficulty diff-${diffClass}">Niveau : ${diffLabel}</span>
-      `;
-      coursGrid.appendChild(card);
+      // Topic header
+      const header = document.createElement('div');
+      header.className = 'cours-topic-header';
+      header.innerHTML = `<span class="emoji">${t.emoji}</span> ${t.name}`;
+      coursGrid.appendChild(header);
+      // 3 level cards
+      const row = document.createElement('div');
+      row.className = 'cours-level-row';
+      LEVELS.forEach(lv => {
+        const steps = topicLessons[lv.key];
+        if (!steps) return;
+        const locked = prog < lv.unlock;
+        const card = document.createElement('div');
+        card.className = 'cours-level-card' + (locked ? ' locked' : '');
+        if (!locked) card.onclick = () => startLesson(t.id, lv.key);
+        card.innerHTML = locked
+          ? `<span class="diff-badge diff-${lv.cls}">${lv.icon} ${lv.label}</span><span class="lock-msg">🔒 Gagne ${lv.unlock} matchs pour débloquer</span>`
+          : `<span class="diff-badge diff-${lv.cls}">${lv.icon} ${lv.label}</span><span class="cours-steps">📖 ${steps.length} étapes</span>`;
+        row.appendChild(card);
+      });
+      coursGrid.appendChild(row);
     });
   }
 
@@ -1928,7 +1964,8 @@ function createParticles() {
 
 const LESSONS = {
 
-calcul_litteral: [
+calcul_litteral: {
+facile: [
   {
     title: 'C\'est quoi le calcul littéral ?',
     icon: '🎯',
@@ -2114,8 +2151,164 @@ calcul_litteral: [
     exercise: { question: 'Factorise : 8x + 24', choices: ['8(x + 3)', '8(x + 24)', '4(2x + 6)', '8x(1 + 3)'], correct: 0 }
   }
 ],
+moyen: [
+  {
+    title: 'Double distribution avancée',
+    icon: '🎯',
+    content: `
+      <p>Tu sais déjà faire <strong>(a + b)(c + d)</strong>. Maintenant, on passe à des expressions plus complexes avec des <strong>signes négatifs</strong> dans la double distribution.</p>
+      <div class="lesson-formula">(a − b)(c + d) = ac + ad − bc − bd</div>
+      <div class="lesson-example">
+        <div class="ex-label">⚽ Exemple pas à pas</div>
+        <div class="ex-content">
+          (3x − 2)(x + 5)<br>
+          <span class="step">3x × x = 3x²</span><br>
+          <span class="step">3x × 5 = 15x</span><br>
+          <span class="step">(−2) × x = −2x</span><br>
+          <span class="step">(−2) × 5 = −10</span><br>
+          <span class="step">= 3x² + 15x − 2x − 10</span><br>
+          <span class="step">= <strong>3x² + 13x − 10</strong></span>
+        </div>
+      </div>
+      <div class="lesson-tip">
+        <div class="tip-label">⚠️ Attention aux signes !</div>
+        Quand le deuxième terme est négatif (−2), toute sa ligne de multiplications change de signe. Comme un défenseur qui intercepte : il inverse la direction !
+      </div>
+    `,
+    exercise: { question: 'Développe (2x − 3)(x + 4) :', choices: ['2x² + 5x − 12', '2x² + 11x − 12', '2x² − 5x − 12', '2x² + 5x + 12'], correct: 0 }
+  },
+  {
+    title: 'Réduire des expressions complexes',
+    icon: '🔄',
+    content: `
+      <p>Quand on a des expressions avec des <strong>x²</strong>, des <strong>x</strong> et des <strong>nombres</strong>, il faut regrouper chaque "famille" séparément.</p>
+      <div class="lesson-formula">On regroupe : termes en x² + termes en x + constantes</div>
+      <div class="lesson-example">
+        <div class="ex-label">⚽ Exemple</div>
+        <div class="ex-content">
+          3x² + 5x + 2 + x² − 3x + 7<br>
+          <span class="step">Termes en x² : 3x² + x² = 4x²</span><br>
+          <span class="step">Termes en x : 5x − 3x = 2x</span><br>
+          <span class="step">Constantes : 2 + 7 = 9</span><br>
+          <span class="step">= <strong>4x² + 2x + 9</strong></span>
+        </div>
+      </div>
+      <div class="lesson-tip">
+        <div class="tip-label">📌 Ce qu'il faut retenir</div>
+        On ne peut PAS additionner des x² avec des x ! C'est comme mélanger des attaquants et des défenseurs dans les stats : chacun son poste.
+      </div>
+    `,
+    exercise: { question: 'Réduis : 2x² + 3x + 1 + x² − x + 4', choices: ['3x² + 2x + 5', '3x² + 4x + 5', '2x² + 2x + 5', '3x² + 2x + 4'], correct: 0 }
+  },
+  {
+    title: 'Introduction aux identités remarquables',
+    icon: '⭐',
+    content: `
+      <p>Les <strong>identités remarquables</strong> sont des formules de développement qu'on utilise tout le temps. La première :</p>
+      <div class="lesson-formula">(a + b)² = a² + 2ab + b²</div>
+      <div class="lesson-example">
+        <div class="ex-label">⚽ Vérifions avec la double distribution</div>
+        <div class="ex-content">
+          (x + 3)² = (x + 3)(x + 3)<br>
+          <span class="step">x × x = x²</span><br>
+          <span class="step">x × 3 = 3x</span><br>
+          <span class="step">3 × x = 3x</span><br>
+          <span class="step">3 × 3 = 9</span><br>
+          <span class="step">= x² + 3x + 3x + 9 = <strong>x² + 6x + 9</strong></span><br>
+          <span class="step">Avec la formule : a=x, b=3 → x² + 2×x×3 + 3² = x² + 6x + 9 ✅</span>
+        </div>
+      </div>
+      <div class="lesson-tip">
+        <div class="tip-label">⚠️ Piège classique</div>
+        (x + 3)² ≠ x² + 9 ! Il ne faut surtout pas oublier le <strong>double produit 2ab</strong>. C'est l'erreur la plus fréquente au brevet !
+      </div>
+    `,
+    exercise: { question: 'Développe (x + 5)² :', choices: ['x² + 10x + 25', 'x² + 25', 'x² + 5x + 25', '2x² + 10x + 25'], correct: 0 }
+  }
+],
+difficile: [
+  {
+    title: 'Les 3 identités remarquables',
+    icon: '🏆',
+    content: `
+      <p>Il y a <strong>3 identités remarquables</strong> à connaître par coeur pour le brevet :</p>
+      <div class="lesson-formula">(a + b)² = a² + 2ab + b²<br>(a − b)² = a² − 2ab + b²<br>(a + b)(a − b) = a² − b²</div>
+      <div class="lesson-example">
+        <div class="ex-label">⚽ Exemples avec chaque formule</div>
+        <div class="ex-content">
+          <strong>(x + 4)²</strong> = x² + 2×x×4 + 4² = <strong>x² + 8x + 16</strong><br><br>
+          <strong>(x − 3)²</strong> = x² − 2×x×3 + 3² = <strong>x² − 6x + 9</strong><br><br>
+          <strong>(x + 5)(x − 5)</strong> = x² − 5² = <strong>x² − 25</strong>
+        </div>
+      </div>
+      <div class="lesson-tip">
+        <div class="tip-label">📌 Ce qu'il faut retenir</div>
+        La 3e identité (a+b)(a−b) = a²−b² est magique : le double produit disparaît ! C'est comme un match nul parfait : les termes croisés s'annulent.
+      </div>
+    `,
+    exercise: { question: 'Développe (x − 7)² :', choices: ['x² − 14x + 49', 'x² + 14x + 49', 'x² − 49', 'x² − 7x + 49'], correct: 0 }
+  },
+  {
+    title: 'Factoriser avec les identités remarquables',
+    icon: '🔓',
+    content: `
+      <p>Les identités remarquables servent aussi à <strong>factoriser</strong> ! Il faut reconnaître la forme.</p>
+      <div class="lesson-formula">a² + 2ab + b² = (a + b)²<br>a² − 2ab + b² = (a − b)²<br>a² − b² = (a + b)(a − b)</div>
+      <div class="lesson-example">
+        <div class="ex-label">⚽ Exemples de factorisation</div>
+        <div class="ex-content">
+          <strong>x² + 6x + 9</strong> → on reconnaît a²+2ab+b² avec a=x, b=3<br>
+          <span class="step">= <strong>(x + 3)²</strong></span><br><br>
+          <strong>x² − 16</strong> → on reconnaît a²−b² avec a=x, b=4<br>
+          <span class="step">= <strong>(x + 4)(x − 4)</strong></span><br><br>
+          <strong>4x² − 12x + 9</strong> → a=2x, b=3 → (2x)²−2×2x×3+3²<br>
+          <span class="step">= <strong>(2x − 3)²</strong></span>
+        </div>
+      </div>
+      <div class="lesson-tip">
+        <div class="tip-label">💡 Comment reconnaître ?</div>
+        • Si tu vois <strong>a² − b²</strong> (deux carrés séparés par un −) → 3e identité<br>
+        • Si tu vois <strong>3 termes</strong> : vérifie si le terme du milieu = 2ab<br>
+        • Le signe du milieu te dit si c'est (a+b)² ou (a−b)²
+      </div>
+    `,
+    exercise: { question: 'Factorise x² − 25 :', choices: ['(x+5)(x−5)', '(x−5)²', '(x+5)²', '(x−25)(x+1)'], correct: 0 }
+  },
+  {
+    title: 'Expressions complexes : développer et factoriser',
+    icon: '🧠',
+    content: `
+      <p>Au brevet, on te demande souvent de <strong>développer puis réduire</strong> une expression, ou de la <strong>factoriser</strong>. Voyons un exercice type.</p>
+      <div class="lesson-example">
+        <div class="ex-label">⚽ Exercice type brevet</div>
+        <div class="ex-content">
+          Soit A = (2x + 3)² − (x − 1)(2x + 3)<br><br>
+          <strong>a) Développer et réduire A :</strong><br>
+          <span class="step">(2x+3)² = 4x² + 12x + 9</span><br>
+          <span class="step">(x−1)(2x+3) = 2x² + 3x − 2x − 3 = 2x² + x − 3</span><br>
+          <span class="step">A = 4x² + 12x + 9 − (2x² + x − 3)</span><br>
+          <span class="step">A = 4x² + 12x + 9 − 2x² − x + 3</span><br>
+          <span class="step">A = <strong>2x² + 11x + 12</strong></span><br><br>
+          <strong>b) Factoriser A :</strong><br>
+          <span class="step">Facteur commun (2x+3) !</span><br>
+          <span class="step">A = (2x+3)(2x+3) − (x−1)(2x+3)</span><br>
+          <span class="step">A = (2x+3)[(2x+3) − (x−1)]</span><br>
+          <span class="step">A = (2x+3)(2x + 3 − x + 1)</span><br>
+          <span class="step">A = <strong>(2x+3)(x+4)</strong></span>
+        </div>
+      </div>
+      <div class="lesson-tip">
+        <div class="tip-label">📌 Ce qu'il faut retenir</div>
+        Quand tu vois un facteur commun dans une soustraction de produits, factorise par ce facteur commun. C'est la clé de beaucoup d'exercices du brevet !
+      </div>
+    `,
+    exercise: { question: 'Factorise (x+2)(3x−1) − (x+2)(x+5) :', choices: ['(x+2)(2x−6)', '(x+2)(4x+4)', '(x+2)(2x+4)', '(3x−1)(x+5)'], correct: 0 }
+  }
+]
+},
 
-fractions: [
+fractions: {
+facile: [
   {
     title: 'C\'est quoi une fraction ?',
     icon: '🍕',
@@ -2253,8 +2446,159 @@ fractions: [
     exercise: { question: 'Simplifie 12/18 :', choices: ['2/3', '6/9', '4/6', '3/4'], correct: 0 }
   }
 ],
+moyen: [
+  {
+    title: 'Multiplier et diviser des fractions',
+    icon: '✖️',
+    content: `
+      <p>Tu sais déjà multiplier des fractions. Pour <strong>diviser</strong>, on utilise un secret : diviser par une fraction, c'est <strong>multiplier par son inverse</strong> !</p>
+      <div class="lesson-formula">a/b ÷ c/d = a/b × d/c<br><br>On retourne la 2e fraction et on multiplie !</div>
+      <div class="lesson-example">
+        <div class="ex-label">⚽ Exemple pas à pas</div>
+        <div class="ex-content">
+          3/4 ÷ 2/5<br>
+          <span class="step">Étape 1 : on retourne 2/5 → 5/2</span><br>
+          <span class="step">Étape 2 : 3/4 × 5/2</span><br>
+          <span class="step">Étape 3 : = (3×5)/(4×2) = <strong>15/8</strong></span>
+        </div>
+      </div>
+      <div class="lesson-tip">
+        <div class="tip-label">📌 Ce qu'il faut retenir</div>
+        L'inverse de a/b c'est b/a. On retourne la fraction ! L'inverse de 2/5 c'est 5/2. Comme un retournement de situation au stade !
+      </div>
+    `,
+    exercise: { question: '5/6 ÷ 2/3 = ?', choices: ['5/4', '10/18', '5/9', '3/4'], correct: 0 }
+  },
+  {
+    title: 'Fractions et nombres relatifs',
+    icon: '➖',
+    content: `
+      <p>Les fractions peuvent être <strong>négatives</strong>. Le signe moins peut se placer devant le numérateur, le dénominateur, ou devant la fraction.</p>
+      <div class="lesson-formula">−a/b = a/(−b) = −(a/b)<br><br>Les 3 écritures sont équivalentes !</div>
+      <div class="lesson-example">
+        <div class="ex-label">⚽ Exemple</div>
+        <div class="ex-content">
+          Calculer −2/3 + 5/3<br>
+          <span class="step">Même dénominateur → on additionne les numérateurs</span><br>
+          <span class="step">= (−2 + 5)/3 = <strong>3/3 = 1</strong></span><br><br>
+          Calculer −3/4 − 1/4<br>
+          <span class="step">= (−3 − 1)/4 = <strong>−4/4 = −1</strong></span>
+        </div>
+      </div>
+      <div class="lesson-tip">
+        <div class="tip-label">💡 Règle des signes pour les fractions</div>
+        C'est la même que pour les nombres relatifs !<br>
+        • (−) × (−) = (+) → −3/−5 = 3/5<br>
+        • (−) × (+) = (−) → −3/5 = −3/5
+      </div>
+    `,
+    exercise: { question: '−3/5 + 7/5 = ?', choices: ['4/5', '−4/5', '10/5', '−10/5'], correct: 0 }
+  },
+  {
+    title: 'Fractions : opérations combinées',
+    icon: '🔢',
+    content: `
+      <p>Quand on enchaîne plusieurs opérations avec des fractions, il faut respecter les <strong>priorités</strong> : d'abord × et ÷, puis + et −.</p>
+      <div class="lesson-example">
+        <div class="ex-label">⚽ Exemple pas à pas</div>
+        <div class="ex-content">
+          Calculer 1/2 + 3/4 × 2/3<br>
+          <span class="step">Étape 1 : on fait la multiplication d'abord</span><br>
+          <span class="step">3/4 × 2/3 = 6/12 = 1/2</span><br>
+          <span class="step">Étape 2 : 1/2 + 1/2 = <strong>1</strong></span>
+        </div>
+      </div>
+      <div class="lesson-tip">
+        <div class="tip-label">📌 Ce qu'il faut retenir</div>
+        Les priorités sont les mêmes qu'avec les nombres entiers :<br>
+        1. Parenthèses d'abord<br>
+        2. × et ÷ ensuite<br>
+        3. + et − en dernier<br>
+        Comme les phases de jeu : d'abord la défense, puis le milieu, puis l'attaque !
+      </div>
+    `,
+    exercise: { question: '2/3 × 3/4 + 1/2 = ?', choices: ['1', '3/4', '7/12', '5/6'], correct: 0 }
+  }
+],
+difficile: [
+  {
+    title: 'Fractions dans les équations',
+    icon: '🔍',
+    content: `
+      <p>Quand une équation contient des fractions, on peut <strong>multiplier tout par le dénominateur commun</strong> pour les éliminer.</p>
+      <div class="lesson-example">
+        <div class="ex-label">⚽ Exemple type brevet</div>
+        <div class="ex-content">
+          x/3 + x/4 = 7<br>
+          <span class="step">Dénominateur commun : 12</span><br>
+          <span class="step">On multiplie tout par 12 :</span><br>
+          <span class="step">12 × x/3 + 12 × x/4 = 12 × 7</span><br>
+          <span class="step">4x + 3x = 84</span><br>
+          <span class="step">7x = 84</span><br>
+          <span class="step">x = <strong>12</strong></span><br>
+          <span class="step">Vérif : 12/3 + 12/4 = 4 + 3 = 7 ✅</span>
+        </div>
+      </div>
+      <div class="lesson-tip">
+        <div class="tip-label">💡 Astuce</div>
+        Multiplier par le dénominateur commun élimine toutes les fractions d'un coup. C'est comme dégager le ballon : on simplifie la situation !
+      </div>
+    `,
+    exercise: { question: 'Résous x/2 + x/3 = 5 :', choices: ['6', '5', '10', '3'], correct: 0 }
+  },
+  {
+    title: 'Problèmes concrets avec fractions',
+    icon: '🧠',
+    content: `
+      <p>Au brevet, les fractions apparaissent souvent dans des <strong>problèmes concrets</strong>. Il faut traduire l'énoncé en calcul.</p>
+      <div class="lesson-example">
+        <div class="ex-label">⚽ Problème type</div>
+        <div class="ex-content">
+          L'OL a joué 38 matchs. Ils ont gagné 1/2 des matchs, perdu 1/4, et fait match nul le reste.<br>
+          <span class="step">Gagnés : 38 × 1/2 = 19</span><br>
+          <span class="step">Perdus : 38 × 1/4 = 9,5 → impossible !</span><br>
+          <span class="step">⚠️ On vérifie : 1/2 + 1/4 = 2/4 + 1/4 = 3/4</span><br>
+          <span class="step">Nuls : 1 − 3/4 = 1/4 des matchs</span><br>
+          <span class="step">Perdus : 38 × 1/4 = 9,5...</span><br>
+          <span class="step">→ L'énoncé n'est pas réaliste (38 n'est pas divisible par 4). Avec 36 matchs : G=18, P=9, N=9 ✅</span>
+        </div>
+      </div>
+      <div class="lesson-tip">
+        <div class="tip-label">📌 Ce qu'il faut retenir</div>
+        Dans un problème, vérifie toujours que ta réponse a du sens ! Un nombre de matchs doit être entier, un prix doit être positif, etc.
+      </div>
+    `,
+    exercise: { question: 'Un club a 60 joueurs. 2/5 sont attaquants, 1/3 sont défenseurs. Combien de milieux/gardiens ?', choices: ['16', '24', '36', '20'], correct: 0 }
+  },
+  {
+    title: 'Calculs fractionnaires complexes',
+    icon: '🏆',
+    content: `
+      <p>Pour les expressions complexes avec fractions, on applique les règles dans l'ordre et on simplifie au maximum.</p>
+      <div class="lesson-example">
+        <div class="ex-label">⚽ Exemple avancé</div>
+        <div class="ex-content">
+          Calculer A = (2/3 − 1/6) ÷ (1/2 + 1/3)<br>
+          <span class="step"><strong>Numérateur :</strong> 2/3 − 1/6 = 4/6 − 1/6 = 3/6 = 1/2</span><br>
+          <span class="step"><strong>Dénominateur :</strong> 1/2 + 1/3 = 3/6 + 2/6 = 5/6</span><br>
+          <span class="step"><strong>Division :</strong> (1/2) ÷ (5/6) = 1/2 × 6/5 = 6/10 = <strong>3/5</strong></span>
+        </div>
+      </div>
+      <div class="lesson-tip">
+        <div class="tip-label">💡 Méthode</div>
+        1. Calcule le numérateur (fraction du haut)<br>
+        2. Calcule le dénominateur (fraction du bas)<br>
+        3. Divise le résultat du haut par celui du bas<br>
+        4. Simplifie !
+      </div>
+    `,
+    exercise: { question: '(3/4 − 1/4) ÷ (1/2) = ?', choices: ['1', '1/4', '1/2', '3/2'], correct: 0 }
+  }
+]
+},
 
-puissances: [
+puissances: {
+facile: [
   {
     title: 'C\'est quoi une puissance ?',
     icon: '⚡',
@@ -2390,8 +2734,158 @@ puissances: [
     exercise: { question: '250 000 en notation scientifique :', choices: ['2,5 × 10⁵', '25 × 10⁴', '2,5 × 10⁶', '0,25 × 10⁶'], correct: 0 }
   }
 ],
+moyen: [
+  {
+    title: 'Puissances négatives',
+    icon: '➖',
+    content: `
+      <p>Un exposant <strong>négatif</strong> signifie qu'on prend l'<strong>inverse</strong> de la puissance positive.</p>
+      <div class="lesson-formula">a⁻ⁿ = 1/aⁿ<br><br>Exemple : 2⁻³ = 1/2³ = 1/8</div>
+      <div class="lesson-example">
+        <div class="ex-label">⚽ Exemples</div>
+        <div class="ex-content">
+          10⁻¹ = 1/10 = <strong>0,1</strong><br>
+          10⁻² = 1/100 = <strong>0,01</strong><br>
+          10⁻³ = 1/1000 = <strong>0,001</strong><br>
+          5⁻² = 1/5² = 1/25 = <strong>0,04</strong>
+        </div>
+      </div>
+      <div class="lesson-tip">
+        <div class="tip-label">📌 Ce qu'il faut retenir</div>
+        L'exposant négatif ne rend PAS le nombre négatif ! Il en fait l'inverse.<br>
+        2⁻³ = 1/8 = 0,125 (c'est positif !)<br>
+        C'est comme en foot : un "retour en arrière" ne change pas d'équipe, ça change de direction.
+      </div>
+    `,
+    exercise: { question: 'Combien vaut 10⁻⁴ ?', choices: ['0,0001', '−10000', '−4', '40'], correct: 0 }
+  },
+  {
+    title: 'Notation scientifique des petits nombres',
+    icon: '🔬',
+    content: `
+      <p>La notation scientifique marche aussi pour les <strong>très petits nombres</strong> grâce aux puissances négatives de 10.</p>
+      <div class="lesson-formula">0,00045 = 4,5 × 10⁻⁴<br><br>L'exposant négatif = nombre de rangs vers la droite</div>
+      <div class="lesson-example">
+        <div class="ex-label">⚽ Exemples concrets</div>
+        <div class="ex-content">
+          Le diamètre d'un cheveu : 0,00007 m = <strong>7 × 10⁻⁵ m</strong><br>
+          <span class="step">La virgule se déplace de 5 rangs → exposant −5</span><br><br>
+          La masse d'une fourmi : 0,001 g = <strong>1 × 10⁻³ g</strong><br>
+          <span class="step">La virgule se déplace de 3 rangs → exposant −3</span>
+        </div>
+      </div>
+      <div class="lesson-tip">
+        <div class="tip-label">💡 Comment trouver l'exposant ?</div>
+        Compte le nombre de rangs pour amener la virgule juste après le 1er chiffre non nul.<br>
+        • Vers la droite → exposant <strong>négatif</strong> (petit nombre)<br>
+        • Vers la gauche → exposant <strong>positif</strong> (grand nombre)
+      </div>
+    `,
+    exercise: { question: '0,0032 en notation scientifique :', choices: ['3,2 × 10⁻³', '32 × 10⁻⁴', '3,2 × 10⁻²', '0,32 × 10⁻²'], correct: 0 }
+  },
+  {
+    title: 'Règles de calcul avec les puissances',
+    icon: '📐',
+    content: `
+      <p>Récapitulatif de toutes les règles de puissances pour les calculs :</p>
+      <div class="lesson-formula">aⁿ × aᵐ = aⁿ⁺ᵐ<br>aⁿ ÷ aᵐ = aⁿ⁻ᵐ<br>(aⁿ)ᵐ = aⁿˣᵐ<br>(a×b)ⁿ = aⁿ × bⁿ</div>
+      <div class="lesson-example">
+        <div class="ex-label">⚽ Applications</div>
+        <div class="ex-content">
+          3⁵ ÷ 3² = 3⁵⁻² = <strong>3³ = 27</strong><br><br>
+          (2 × 5)³ = 2³ × 5³ = 8 × 125 = <strong>1000</strong><br>
+          <span class="step">Vérif : 10³ = 1000 ✅</span>
+        </div>
+      </div>
+      <div class="lesson-tip">
+        <div class="tip-label">⚠️ La règle de la division</div>
+        aⁿ ÷ aᵐ = aⁿ⁻ᵐ. Si n < m, on obtient un exposant négatif !<br>
+        3² ÷ 3⁵ = 3²⁻⁵ = 3⁻³ = 1/27
+      </div>
+    `,
+    exercise: { question: 'Simplifie 5⁷ ÷ 5⁴ :', choices: ['5³', '5¹¹', '1³', '5²⁸'], correct: 0 }
+  }
+],
+difficile: [
+  {
+    title: 'Calculs combinés avec puissances de 10',
+    icon: '🧮',
+    content: `
+      <p>Au brevet, on doit souvent <strong>multiplier ou diviser des nombres en notation scientifique</strong>.</p>
+      <div class="lesson-formula">(a × 10ⁿ) × (b × 10ᵐ) = (a×b) × 10ⁿ⁺ᵐ<br><br>Puis on remet en notation scientifique si besoin !</div>
+      <div class="lesson-example">
+        <div class="ex-label">⚽ Exemple</div>
+        <div class="ex-content">
+          (3 × 10⁴) × (2 × 10⁵)<br>
+          <span class="step">= (3 × 2) × 10⁴⁺⁵</span><br>
+          <span class="step">= 6 × 10⁹</span><br>
+          <span class="step">C'est déjà en notation scientifique ✅</span><br><br>
+          (4 × 10³) × (5 × 10⁶)<br>
+          <span class="step">= 20 × 10⁹</span><br>
+          <span class="step">⚠️ 20 ≥ 10, pas en notation scientifique !</span><br>
+          <span class="step">= <strong>2 × 10¹⁰</strong></span>
+        </div>
+      </div>
+      <div class="lesson-tip">
+        <div class="tip-label">📌 Ce qu'il faut retenir</div>
+        Après le calcul, vérifie que le nombre devant est bien entre 1 et 10. Si c'est 20, transforme en 2 × 10¹ et additionne les exposants.
+      </div>
+    `,
+    exercise: { question: '(6 × 10³) × (3 × 10⁵) = ?', choices: ['1,8 × 10⁹', '18 × 10⁸', '1,8 × 10⁸', '9 × 10⁸'], correct: 0 }
+  },
+  {
+    title: 'Comparaisons et conversions',
+    icon: '📊',
+    content: `
+      <p>Pour <strong>comparer</strong> des nombres en notation scientifique, on compare d'abord les exposants, puis les coefficients.</p>
+      <div class="lesson-example">
+        <div class="ex-label">⚽ Qui est le plus grand ?</div>
+        <div class="ex-content">
+          A = 3,5 × 10⁷ et B = 8,2 × 10⁶<br>
+          <span class="step">10⁷ > 10⁶ → <strong>A > B</strong></span><br>
+          <span class="step">A = 35 000 000 et B = 8 200 000</span><br><br>
+          C = 4,1 × 10⁵ et D = 9,8 × 10⁵<br>
+          <span class="step">Même exposant → on compare les coefficients</span><br>
+          <span class="step">9,8 > 4,1 → <strong>D > C</strong></span>
+        </div>
+      </div>
+      <div class="lesson-tip">
+        <div class="tip-label">💡 Astuce</div>
+        Pour comparer, mets les nombres avec le <strong>même exposant</strong>.<br>
+        3,5 × 10⁷ = 35 × 10⁶ et 8,2 × 10⁶ → 35 > 8,2 donc A > B.<br>
+        C'est comme comparer les classements en Ligue 1 : d'abord les points, puis la différence de buts !
+      </div>
+    `,
+    exercise: { question: 'Quel est le plus grand : 5,3 × 10⁴ ou 2,7 × 10⁵ ?', choices: ['2,7 × 10⁵', '5,3 × 10⁴', 'Ils sont égaux', 'On ne peut pas comparer'], correct: 0 }
+  },
+  {
+    title: 'Problèmes avec très grands et très petits nombres',
+    icon: '🌍',
+    content: `
+      <p>Les puissances de 10 permettent de résoudre des problèmes avec des nombres gigantesques ou minuscules.</p>
+      <div class="lesson-example">
+        <div class="ex-label">⚽ Problème type brevet</div>
+        <div class="ex-content">
+          La Terre est à 1,5 × 10⁸ km du Soleil. La lumière va à 3 × 10⁵ km/s. Combien de temps met la lumière ?<br>
+          <span class="step">Temps = Distance ÷ Vitesse</span><br>
+          <span class="step">= (1,5 × 10⁸) ÷ (3 × 10⁵)</span><br>
+          <span class="step">= (1,5 ÷ 3) × 10⁸⁻⁵</span><br>
+          <span class="step">= 0,5 × 10³</span><br>
+          <span class="step">= <strong>5 × 10² = 500 secondes ≈ 8 min 20 s</strong></span>
+        </div>
+      </div>
+      <div class="lesson-tip">
+        <div class="tip-label">📌 Ce qu'il faut retenir</div>
+        Pour diviser : on divise les coefficients ET on soustrait les exposants. N'oublie pas de remettre en notation scientifique (0,5 × 10³ = 5 × 10²).
+      </div>
+    `,
+    exercise: { question: '(8 × 10⁶) ÷ (4 × 10²) = ?', choices: ['2 × 10⁴', '2 × 10³', '4 × 10⁴', '2 × 10⁸'], correct: 0 }
+  }
+]
+},
 
-pythagore: [
+pythagore: {
+facile: [
   {
     title: 'Le triangle rectangle',
     icon: '📐',
@@ -2500,8 +2994,161 @@ pythagore: [
     exercise: { question: 'Triangle de côtés 7, 24, 25. Est-il rectangle ?', choices: ['Oui', 'Non'], correct: 0 }
   }
 ],
+moyen: [
+  {
+    title: 'Trouver un côté manquant : méthode complète',
+    icon: '🔍',
+    content: `
+      <p>Tu connais les deux formules. Maintenant, apprends à <strong>choisir la bonne</strong> selon la situation.</p>
+      <div class="lesson-formula">Chercher l'hypoténuse : c² = a² + b² (on additionne)<br>Chercher un autre côté : a² = c² − b² (on soustrait)</div>
+      <div class="lesson-example">
+        <div class="ex-label">⚽ Exemple avec des décimaux</div>
+        <div class="ex-content">
+          Triangle rectangle avec côtés 2,5 m et 6 m. Hypoténuse = ?<br>
+          <span class="step">c² = 2,5² + 6²</span><br>
+          <span class="step">c² = 6,25 + 36 = 42,25</span><br>
+          <span class="step">c = √42,25 = <strong>6,5 m</strong></span>
+        </div>
+      </div>
+      <div class="lesson-tip">
+        <div class="tip-label">📌 Ce qu'il faut retenir</div>
+        Pose-toi la question : est-ce que je cherche le <strong>plus grand côté</strong> (hypoténuse) ou un <strong>plus petit</strong> ?<br>
+        • Plus grand → j'additionne les carrés<br>
+        • Plus petit → je soustrais les carrés<br>
+        Et toujours la racine carrée à la fin !
+      </div>
+    `,
+    exercise: { question: 'Triangle rectangle : un côté = 9, hypoténuse = 15. Autre côté = ?', choices: ['12', '6', '18', '√306'], correct: 0 }
+  },
+  {
+    title: 'Applications concrètes de Pythagore',
+    icon: '🏗️',
+    content: `
+      <p>Le théorème de Pythagore est utilisé partout dans la vie réelle : construction, sport, navigation...</p>
+      <div class="lesson-example">
+        <div class="ex-label">⚽ Le terrain de foot</div>
+        <div class="ex-content">
+          Un terrain fait 100 m × 64 m. Quelle est la longueur de la diagonale ?<br>
+          <span class="step">d² = 100² + 64²</span><br>
+          <span class="step">d² = 10 000 + 4 096 = 14 096</span><br>
+          <span class="step">d = √14 096 ≈ <strong>118,7 m</strong></span><br>
+          <span class="step">La diagonale du terrain fait presque 119 mètres !</span>
+        </div>
+      </div>
+      <div class="lesson-example">
+        <div class="ex-label">⚽ L'échelle du stadier</div>
+        <div class="ex-content">
+          Une échelle de 5 m est posée à 3 m du mur. À quelle hauteur touche-t-elle le mur ?<br>
+          <span class="step">h² = 5² − 3² = 25 − 9 = 16</span><br>
+          <span class="step">h = √16 = <strong>4 m</strong></span>
+        </div>
+      </div>
+      <div class="lesson-tip">
+        <div class="tip-label">💡 Astuce pour les problèmes</div>
+        Fais TOUJOURS un schéma ! Dessine le triangle rectangle, identifie l'angle droit et l'hypoténuse. Le schéma te dit quelle formule utiliser.
+      </div>
+    `,
+    exercise: { question: 'Un écran TV a une diagonale de 55 pouces et une largeur de 44 pouces. Quelle est sa hauteur ?', choices: ['33 pouces', '11 pouces', '99 pouces', '25 pouces'], correct: 0 }
+  },
+  {
+    title: 'Pythagore avec des racines carrées',
+    icon: '√',
+    content: `
+      <p>Parfois, la racine carrée ne tombe pas juste. Il faut donner une <strong>valeur exacte</strong> ou une <strong>valeur approchée</strong>.</p>
+      <div class="lesson-example">
+        <div class="ex-label">⚽ Exemple</div>
+        <div class="ex-content">
+          Triangle rectangle avec côtés 4 et 7. Hypoténuse = ?<br>
+          <span class="step">c² = 4² + 7² = 16 + 49 = 65</span><br>
+          <span class="step">c = √65</span><br>
+          <span class="step">Valeur exacte : <strong>√65</strong></span><br>
+          <span class="step">Valeur approchée : <strong>≈ 8,06</strong> (à la calculatrice)</span>
+        </div>
+      </div>
+      <div class="lesson-tip">
+        <div class="tip-label">📌 Ce qu'il faut retenir</div>
+        Au brevet, on te demande soit la valeur <strong>exacte</strong> (laisse √), soit une valeur <strong>approchée</strong> (utilise la calculatrice et arrondis). Lis bien la consigne !
+      </div>
+    `,
+    exercise: { question: 'Triangle rectangle avec côtés 5 et 8. Hypoténuse exacte = ?', choices: ['√89', '√13', '13', '√65'], correct: 0 }
+  }
+],
+difficile: [
+  {
+    title: 'La réciproque de Pythagore',
+    icon: '🔄',
+    content: `
+      <p>La <strong>réciproque</strong> de Pythagore dit : si c² = a² + b², alors le triangle EST rectangle. C'est un outil pour <strong>prouver</strong> qu'un triangle est rectangle.</p>
+      <div class="lesson-formula">Si le carré du plus grand côté = somme des carrés des deux autres<br>→ Le triangle est rectangle en l'angle opposé au plus grand côté</div>
+      <div class="lesson-example">
+        <div class="ex-label">⚽ Exercice type brevet</div>
+        <div class="ex-content">
+          Un triangle ABC a pour côtés AB = 8, BC = 15, AC = 17. Est-il rectangle ?<br>
+          <span class="step">Le plus grand côté est AC = 17</span><br>
+          <span class="step">AC² = 17² = 289</span><br>
+          <span class="step">AB² + BC² = 8² + 15² = 64 + 225 = 289</span><br>
+          <span class="step">AC² = AB² + BC² ✅</span><br>
+          <span class="step">D'après la <strong>réciproque du théorème de Pythagore</strong>, le triangle ABC est rectangle en B.</span>
+        </div>
+      </div>
+      <div class="lesson-tip">
+        <div class="tip-label">⚠️ Rédaction au brevet</div>
+        Il faut TOUJOURS écrire "D'après la réciproque du théorème de Pythagore" dans ta rédaction. Les points de rédaction comptent !
+      </div>
+    `,
+    exercise: { question: 'Triangle : 9, 40, 41. Rectangle ?', choices: ['Oui (car 41² = 9² + 40²)', 'Non', 'On ne peut pas savoir', 'Oui (car 9 + 40 = 49)'], correct: 0 }
+  },
+  {
+    title: 'Pythagore dans l\'espace et les figures complexes',
+    icon: '🏗️',
+    content: `
+      <p>Pythagore peut s'utiliser <strong>plusieurs fois</strong> dans un même problème, notamment dans les figures en 3D ou les figures complexes.</p>
+      <div class="lesson-example">
+        <div class="ex-label">⚽ Diagonale d'un pavé droit</div>
+        <div class="ex-content">
+          Un pavé droit mesure L=4, l=3, h=12. Diagonale de l'espace = ?<br>
+          <span class="step"><strong>Étape 1 :</strong> diagonale de la base</span><br>
+          <span class="step">d₁² = 4² + 3² = 16 + 9 = 25 → d₁ = 5</span><br>
+          <span class="step"><strong>Étape 2 :</strong> diagonale de l'espace</span><br>
+          <span class="step">D² = d₁² + h² = 25 + 144 = 169</span><br>
+          <span class="step">D = √169 = <strong>13</strong></span>
+        </div>
+      </div>
+      <div class="lesson-tip">
+        <div class="tip-label">📌 Ce qu'il faut retenir</div>
+        En 3D, on applique Pythagore deux fois : une fois sur la base, une fois dans l'espace. C'est comme un dribble enchaîné : deux gestes successifs !
+      </div>
+    `,
+    exercise: { question: 'Pavé droit : L=6, l=8, h=24. Diagonale de l\'espace = ?', choices: ['26', '38', '10', '√676'], correct: 0 }
+  },
+  {
+    title: 'Pythagore et coordonnées',
+    icon: '📍',
+    content: `
+      <p>Dans un repère, la <strong>distance entre deux points</strong> se calcule grâce à Pythagore !</p>
+      <div class="lesson-formula">Distance AB = √[(x_B − x_A)² + (y_B − y_A)²]</div>
+      <div class="lesson-example">
+        <div class="ex-label">⚽ Exemple</div>
+        <div class="ex-content">
+          A(1 ; 2) et B(4 ; 6). Distance AB = ?<br>
+          <span class="step">Différence en x : 4 − 1 = 3</span><br>
+          <span class="step">Différence en y : 6 − 2 = 4</span><br>
+          <span class="step">AB² = 3² + 4² = 9 + 16 = 25</span><br>
+          <span class="step">AB = √25 = <strong>5</strong></span>
+        </div>
+      </div>
+      <div class="lesson-tip">
+        <div class="tip-label">💡 Pourquoi ça marche ?</div>
+        En reliant A et B, et en traçant les projections horizontale et verticale, on forme un triangle rectangle ! Les "différences de coordonnées" sont les deux côtés de l'angle droit.
+      </div>
+    `,
+    exercise: { question: 'Distance entre A(0;0) et B(5;12) = ?', choices: ['13', '17', '7', '√17'], correct: 0 }
+  }
+]
+},
 
-proportionnalite: [
+proportionnalite: {
+facile: [
   {
     title: 'C\'est quoi la proportionnalité ?',
     icon: '⚖️',
@@ -2589,8 +3236,153 @@ proportionnalite: [
     exercise: { question: '5 croissants coûtent 6€. Prix de 15 croissants ?', choices: ['18€', '26€', '11€', '30€'], correct: 0 }
   }
 ],
+moyen: [
+  {
+    title: 'Tableaux de proportionnalité',
+    icon: '📋',
+    content: `
+      <p>Un <strong>tableau de proportionnalité</strong> est un tableau où chaque colonne est proportionnelle. On peut utiliser le <strong>coefficient de proportionnalité</strong> ou le <strong>produit en croix</strong>.</p>
+      <div class="lesson-example">
+        <div class="ex-label">⚽ Exemple : budget maillots OL</div>
+        <div class="ex-content">
+          <span class="step">Maillots :  2  |  5  |  ?</span><br>
+          <span class="step">Prix (€) : 160 | 400 | 560</span><br><br>
+          <span class="step">Coefficient : 160 ÷ 2 = 80€ par maillot</span><br>
+          <span class="step">Vérif : 5 × 80 = 400 ✅</span><br>
+          <span class="step">Nombre de maillots : 560 ÷ 80 = <strong>7 maillots</strong></span>
+        </div>
+      </div>
+      <div class="lesson-tip">
+        <div class="tip-label">📌 Ce qu'il faut retenir</div>
+        Pour vérifier qu'un tableau est proportionnel : divise chaque valeur de la 2e ligne par la valeur correspondante de la 1re. Si le résultat est toujours le même, c'est proportionnel !
+      </div>
+    `,
+    exercise: { question: 'Dans un tableau proportionnel : 3→12, 7→28, 10→?', choices: ['40', '30', '38', '42'], correct: 0 }
+  },
+  {
+    title: 'Vitesse, distance, temps',
+    icon: '🏃',
+    content: `
+      <p>La formule <strong>vitesse × temps = distance</strong> est un cas de proportionnalité très important.</p>
+      <div class="lesson-formula">V = D ÷ T<br>D = V × T<br>T = D ÷ V</div>
+      <div class="lesson-example">
+        <div class="ex-label">⚽ Exemple football</div>
+        <div class="ex-content">
+          Mbappé court à 36 km/h. Combien de temps pour parcourir 90 m ?<br>
+          <span class="step">36 km/h = 36 000 m / 3 600 s = 10 m/s</span><br>
+          <span class="step">T = D ÷ V = 90 ÷ 10 = <strong>9 secondes</strong></span>
+        </div>
+      </div>
+      <div class="lesson-tip">
+        <div class="tip-label">💡 Conversions utiles</div>
+        • Pour passer de km/h à m/s : <strong>divise par 3,6</strong><br>
+        • Pour passer de m/s à km/h : <strong>multiplie par 3,6</strong><br>
+        • 1h = 3600s, 1km = 1000m
+      </div>
+    `,
+    exercise: { question: 'Une voiture roule à 90 km/h pendant 2h30. Distance = ?', choices: ['225 km', '180 km', '45 km', '270 km'], correct: 0 }
+  },
+  {
+    title: 'Proportionnalité et graphiques',
+    icon: '📈',
+    content: `
+      <p>Quand deux grandeurs sont proportionnelles, leur graphique est une <strong>droite passant par l'origine</strong> (le point 0,0).</p>
+      <div class="lesson-example">
+        <div class="ex-label">⚽ Exemple</div>
+        <div class="ex-content">
+          Prix des places OL :<br>
+          <span class="step">1 place → 15€ | 2 places → 30€ | 5 places → 75€</span><br>
+          <span class="step">Si on trace les points (1;15), (2;30), (5;75)...</span><br>
+          <span class="step">...ils sont alignés ET la droite passe par (0;0)</span><br>
+          <span class="step">→ C'est bien proportionnel !</span>
+        </div>
+      </div>
+      <div class="lesson-tip">
+        <div class="tip-label">⚠️ Attention</div>
+        Si les points sont alignés mais la droite ne passe PAS par l'origine, ce n'est PAS proportionnel ! Exemple : un forfait téléphone avec abonnement fixe.
+      </div>
+    `,
+    exercise: { question: 'Un graphique est une droite passant par (0;0). Proportionnel ?', choices: ['Oui', 'Non', 'Ça dépend', 'Pas assez d\'infos'], correct: 0 }
+  }
+],
+difficile: [
+  {
+    title: 'Pourcentages d\'évolution',
+    icon: '📊',
+    content: `
+      <p>Un <strong>pourcentage d'augmentation ou de diminution</strong> se calcule avec le <strong>coefficient multiplicateur</strong>.</p>
+      <div class="lesson-formula">Augmentation de t% → on multiplie par (1 + t/100)<br>Diminution de t% → on multiplie par (1 − t/100)</div>
+      <div class="lesson-example">
+        <div class="ex-label">⚽ Exemple</div>
+        <div class="ex-content">
+          Le prix d'un abonnement OL passe de 200€ à 230€.<br>
+          <span class="step">Augmentation : 230 − 200 = 30€</span><br>
+          <span class="step">Taux : 30/200 = 0,15 = <strong>15%</strong></span><br><br>
+          Un maillot à 90€ baisse de 20% puis augmente de 10% :<br>
+          <span class="step">Après baisse : 90 × 0,80 = 72€</span><br>
+          <span class="step">Après hausse : 72 × 1,10 = <strong>79,20€</strong></span><br>
+          <span class="step">⚠️ Ce n'est PAS 90€ ! Une baisse de 20% puis hausse de 10% ≠ baisse de 10%</span>
+        </div>
+      </div>
+      <div class="lesson-tip">
+        <div class="tip-label">📌 Ce qu'il faut retenir</div>
+        Les pourcentages successifs ne s'additionnent PAS ! On multiplie les coefficients : 0,80 × 1,10 = 0,88, soit une baisse globale de 12%.
+      </div>
+    `,
+    exercise: { question: 'Un article à 50€ augmente de 20% puis baisse de 20%. Prix final ?', choices: ['48€', '50€', '52€', '40€'], correct: 0 }
+  },
+  {
+    title: 'Les échelles',
+    icon: '🗺️',
+    content: `
+      <p>Une <strong>échelle</strong> est un rapport de proportionnalité entre les distances sur un plan et les distances réelles.</p>
+      <div class="lesson-formula">Échelle = distance sur le plan / distance réelle<br><br>Échelle 1/500 → 1 cm sur le plan = 500 cm en réalité = 5 m</div>
+      <div class="lesson-example">
+        <div class="ex-label">⚽ Exemple : plan du stade</div>
+        <div class="ex-content">
+          Sur un plan à l'échelle 1/2000, le terrain mesure 5 cm de long.<br>
+          <span class="step">Distance réelle = 5 × 2000 = 10 000 cm</span><br>
+          <span class="step">= 10 000 ÷ 100 = <strong>100 m</strong></span><br>
+          <span class="step">C'est bien la longueur d'un terrain de foot !</span>
+        </div>
+      </div>
+      <div class="lesson-tip">
+        <div class="tip-label">💡 Méthode</div>
+        • Plan → Réel : <strong>multiplie</strong> par le dénominateur de l'échelle<br>
+        • Réel → Plan : <strong>divise</strong> par le dénominateur de l'échelle<br>
+        Attention aux unités : convertis tout en cm pour calculer !
+      </div>
+    `,
+    exercise: { question: 'Échelle 1/50000. 3 cm sur la carte = combien en réalité ?', choices: ['1,5 km', '150 m', '15 km', '1500 m'], correct: 0 }
+  },
+  {
+    title: 'Problèmes composés de proportionnalité',
+    icon: '🧠',
+    content: `
+      <p>Au brevet, les problèmes mélangent souvent <strong>plusieurs notions</strong> de proportionnalité.</p>
+      <div class="lesson-example">
+        <div class="ex-label">⚽ Problème type brevet</div>
+        <div class="ex-content">
+          L'OL organise un déplacement pour 150 supporters. Un bus coûte 350€ et contient 50 places. Chaque supporter paie 12€.<br><br>
+          <span class="step"><strong>a) Nombre de bus :</strong> 150 ÷ 50 = 3 bus</span><br>
+          <span class="step"><strong>b) Coût total bus :</strong> 3 × 350 = 1050€</span><br>
+          <span class="step"><strong>c) Recette billets :</strong> 150 × 12 = 1800€</span><br>
+          <span class="step"><strong>d) Bénéfice :</strong> 1800 − 1050 = <strong>750€</strong></span><br>
+          <span class="step"><strong>e) Bénéfice par personne :</strong> 750 ÷ 150 = 5€/pers</span>
+        </div>
+      </div>
+      <div class="lesson-tip">
+        <div class="tip-label">📌 Ce qu'il faut retenir</div>
+        Dans un problème à plusieurs questions, chaque réponse sert pour la suite. Organise bien tes calculs et garde les résultats intermédiaires !
+      </div>
+    `,
+    exercise: { question: '200 supporters, bus de 60 places à 400€. Combien de bus minimum ?', choices: ['4', '3', '3,33', '200'], correct: 0 }
+  }
+]
+},
 
-statistiques: [
+statistiques: {
+facile: [
   {
     title: 'C\'est quoi les statistiques ?',
     icon: '📊',
@@ -2700,8 +3492,160 @@ statistiques: [
     exercise: { question: 'Étendue de : 12, 5, 8, 19, 3 ?', choices: ['16', '19', '3', '9'], correct: 0 }
   }
 ],
+moyen: [
+  {
+    title: 'Médiane : cas pairs et impairs',
+    icon: '📏',
+    content: `
+      <p>La méthode pour trouver la <strong>médiane</strong> dépend du nombre de valeurs :</p>
+      <div class="lesson-formula">n impair → médiane = valeur en position (n+1)/2<br>n pair → médiane = moyenne des deux valeurs centrales</div>
+      <div class="lesson-example">
+        <div class="ex-label">⚽ Nombre pair : 6 matchs</div>
+        <div class="ex-content">
+          Buts marqués : 0, 1, 2, 3, 1, 4<br>
+          <span class="step">Trié : 0, 1, 1, 2, 3, 4 (6 valeurs)</span><br>
+          <span class="step">Positions centrales : 3e et 4e → 1 et 2</span><br>
+          <span class="step">Médiane = (1 + 2) ÷ 2 = <strong>1,5</strong></span>
+        </div>
+      </div>
+      <div class="lesson-example">
+        <div class="ex-label">⚽ Nombre impair : 7 matchs</div>
+        <div class="ex-content">
+          Buts : 0, 1, 2, 3, 1, 4, 2<br>
+          <span class="step">Trié : 0, 1, 1, 2, 2, 3, 4 (7 valeurs)</span><br>
+          <span class="step">Position centrale : (7+1)/2 = 4e valeur → <strong>2</strong></span>
+        </div>
+      </div>
+      <div class="lesson-tip">
+        <div class="tip-label">📌 Ce qu'il faut retenir</div>
+        La médiane n'est PAS toujours la moyenne ! La médiane est la valeur du milieu, la moyenne est la somme ÷ le nombre. Elles peuvent être très différentes !
+      </div>
+    `,
+    exercise: { question: 'Médiane de 2, 5, 8, 11, 14, 20 ?', choices: ['9,5', '10', '8', '11'], correct: 0 }
+  },
+  {
+    title: 'Effectifs cumulés croissants',
+    icon: '📊',
+    content: `
+      <p>Les <strong>effectifs cumulés croissants</strong> (ECC) comptent combien de valeurs sont <strong>inférieures ou égales</strong> à chaque valeur.</p>
+      <div class="lesson-example">
+        <div class="ex-label">⚽ Notes d'un contrôle (classe de 4e)</div>
+        <div class="ex-content">
+          <span class="step">Note :     5 | 8 | 10 | 12 | 15 | 18</span><br>
+          <span class="step">Effectif : 2 | 4 |  8 |  6 |  3 |  2</span><br>
+          <span class="step">ECC :      2 | 6 | 14 | 20 | 23 | 25</span><br><br>
+          <span class="step">ECC de 10 = 14 → 14 élèves ont eu 10 ou moins</span><br>
+          <span class="step">Total : 25 élèves</span><br>
+          <span class="step">Médiane : 25/2 = 12,5 → la 13e valeur → note <strong>10</strong></span>
+        </div>
+      </div>
+      <div class="lesson-tip">
+        <div class="tip-label">💡 Astuce pour la médiane avec un tableau</div>
+        Avec n valeurs, cherche le rang (n+1)/2 dans les ECC. La médiane est la valeur correspondant au premier ECC qui dépasse ce rang.
+      </div>
+    `,
+    exercise: { question: 'ECC : 3, 8, 15, 22, 25. Effectif total = ?', choices: ['25', '15', '73', '5'], correct: 0 }
+  },
+  {
+    title: 'Moyenne pondérée (avec coefficients)',
+    icon: '⚖️',
+    content: `
+      <p>Quand les valeurs n'ont pas toutes la même importance, on utilise une <strong>moyenne pondérée</strong> avec des <strong>coefficients</strong>.</p>
+      <div class="lesson-formula">Moyenne pondérée = Σ(valeur × coefficient) ÷ Σ(coefficients)</div>
+      <div class="lesson-example">
+        <div class="ex-label">⚽ Exemple : notes au brevet</div>
+        <div class="ex-content">
+          Maths (coef 3) : 14 | Français (coef 3) : 11 | Sport (coef 1) : 16<br>
+          <span class="step">Total pondéré : 14×3 + 11×3 + 16×1 = 42 + 33 + 16 = 91</span><br>
+          <span class="step">Total coefficients : 3 + 3 + 1 = 7</span><br>
+          <span class="step">Moyenne : 91 ÷ 7 = <strong>13</strong></span>
+        </div>
+      </div>
+      <div class="lesson-tip">
+        <div class="tip-label">📌 Ce qu'il faut retenir</div>
+        La moyenne pondérée donne plus de poids aux matières avec un gros coefficient. Un 14 en maths (coef 3) compte plus qu'un 16 en sport (coef 1) !
+      </div>
+    `,
+    exercise: { question: 'Notes : 12 (coef 2), 16 (coef 1), 8 (coef 3). Moyenne pondérée ?', choices: ['11', '12', '10,67', '36'], correct: 0 }
+  }
+],
+difficile: [
+  {
+    title: 'Fréquences et fréquences cumulées',
+    icon: '📈',
+    content: `
+      <p>La <strong>fréquence</strong> d'une valeur est le rapport entre son effectif et l'effectif total. Elle s'exprime en pourcentage.</p>
+      <div class="lesson-formula">Fréquence = Effectif de la valeur ÷ Effectif total<br><br>La somme de toutes les fréquences = 1 (ou 100%)</div>
+      <div class="lesson-example">
+        <div class="ex-label">⚽ Stats de l'OL : buts par match</div>
+        <div class="ex-content">
+          <span class="step">Buts :     0 |  1 |  2 |  3 | Total</span><br>
+          <span class="step">Effectif : 8 | 12 | 14 |  6 |  40</span><br>
+          <span class="step">Fréq :   0,2 | 0,3| 0,35|0,15|  1</span><br>
+          <span class="step">En % :   20% | 30%| 35% |15% | 100%</span><br><br>
+          <span class="step">L'OL ne marque pas dans 20% de ses matchs</span><br>
+          <span class="step">L'OL marque 2+ buts dans 35%+15% = 50% des matchs</span>
+        </div>
+      </div>
+      <div class="lesson-tip">
+        <div class="tip-label">💡 Vérification</div>
+        La somme des fréquences doit TOUJOURS faire 1 (ou 100%). Si ce n'est pas le cas, il y a une erreur !
+      </div>
+    `,
+    exercise: { question: '15 élèves sur 30 ont eu plus de 12. Fréquence ?', choices: ['50%', '15%', '30%', '0,15'], correct: 0 }
+  },
+  {
+    title: 'Construire et lire des diagrammes',
+    icon: '📊',
+    content: `
+      <p>Au brevet, tu dois savoir <strong>lire</strong> et <strong>construire</strong> des diagrammes en bâtons, circulaires et histogrammes.</p>
+      <div class="lesson-example">
+        <div class="ex-label">⚽ Diagramme circulaire : budget OL</div>
+        <div class="ex-content">
+          Salaires : 60% | Transferts : 25% | Stade : 15%<br>
+          <span class="step">Angle = fréquence × 360°</span><br>
+          <span class="step">Salaires : 0,60 × 360 = <strong>216°</strong></span><br>
+          <span class="step">Transferts : 0,25 × 360 = <strong>90°</strong></span><br>
+          <span class="step">Stade : 0,15 × 360 = <strong>54°</strong></span><br>
+          <span class="step">Vérif : 216 + 90 + 54 = 360° ✅</span>
+        </div>
+      </div>
+      <div class="lesson-tip">
+        <div class="tip-label">📌 Ce qu'il faut retenir</div>
+        • Diagramme circulaire : angle = fréquence × 360°<br>
+        • Diagramme en bâtons : hauteur proportionnelle à l'effectif<br>
+        • Histogramme : pour des données regroupées en classes (intervalles)
+      </div>
+    `,
+    exercise: { question: 'Une catégorie représente 25% du total. Son angle dans un diagramme circulaire ?', choices: ['90°', '25°', '45°', '180°'], correct: 0 }
+  },
+  {
+    title: 'Problème complet de statistiques',
+    icon: '🏆',
+    content: `
+      <p>Au brevet, on te donne un tableau et on te demande de calculer <strong>tous les indicateurs</strong>. Entraîne-toi avec cet exercice complet.</p>
+      <div class="lesson-example">
+        <div class="ex-label">⚽ Exercice type brevet</div>
+        <div class="ex-content">
+          Nombre de tirs par match de l'OL (10 matchs) : 8, 12, 5, 15, 10, 10, 7, 14, 9, 10<br><br>
+          <span class="step"><strong>Moyenne :</strong> (8+12+5+15+10+10+7+14+9+10) ÷ 10 = 100 ÷ 10 = <strong>10</strong></span><br><br>
+          <span class="step"><strong>Trié :</strong> 5, 7, 8, 9, 10, 10, 10, 12, 14, 15</span><br>
+          <span class="step"><strong>Médiane :</strong> 10 valeurs → (5e + 6e)/2 = (10+10)/2 = <strong>10</strong></span><br><br>
+          <span class="step"><strong>Étendue :</strong> 15 − 5 = <strong>10</strong></span>
+        </div>
+      </div>
+      <div class="lesson-tip">
+        <div class="tip-label">📌 Ce qu'il faut retenir</div>
+        Au brevet, montre TOUS tes calculs et écris des phrases de conclusion : "La moyenne de tirs par match est de 10" plutôt que juste "10".
+      </div>
+    `,
+    exercise: { question: 'Série : 4, 4, 6, 8, 8, 8, 10. Moyenne et médiane ?', choices: ['Moy=6,86 Med=8', 'Moy=8 Med=6,86', 'Moy=7 Med=7', 'Moy=6,86 Med=6'], correct: 0 }
+  }
+]
+},
 
-equations: [
+equations: {
+facile: [
   {
     title: 'C\'est quoi une équation ?',
     icon: '🔍',
@@ -2814,8 +3758,174 @@ equations: [
     exercise: { question: 'Résous : 3(x + 2) = 21', answer: '5' }
   }
 ],
+moyen: [
+  {
+    title: 'Équations avec x des deux côtés : entraînement',
+    icon: '⚖️',
+    content: `
+      <p>Quand <strong>x</strong> est des deux côtés, la méthode est : regrouper les x d'un côté et les nombres de l'autre.</p>
+      <div class="lesson-example">
+        <div class="ex-label">⚽ Exemple détaillé</div>
+        <div class="ex-content">
+          6x − 4 = 2x + 16<br>
+          <span class="step">Étape 1 : on enlève 2x des deux côtés</span><br>
+          <span class="step">6x − 2x − 4 = 16 → 4x − 4 = 16</span><br>
+          <span class="step">Étape 2 : on ajoute 4 des deux côtés</span><br>
+          <span class="step">4x = 16 + 4 = 20</span><br>
+          <span class="step">Étape 3 : on divise par 4</span><br>
+          <span class="step">x = 20 ÷ 4 = <strong>5</strong></span><br>
+          <span class="step">Vérif : 6×5−4 = 26 et 2×5+16 = 26 ✅</span>
+        </div>
+      </div>
+      <div class="lesson-tip">
+        <div class="tip-label">💡 Astuce</div>
+        Passe les x du côté où il y en a le plus (pour éviter les x négatifs). Ici 6x > 2x, donc on garde les x à gauche. C'est comme mettre les meilleurs attaquants devant !
+      </div>
+    `,
+    exercise: { question: 'Résous : 8x + 3 = 3x + 28', answer: '5' }
+  },
+  {
+    title: 'Équations avec parenthèses des deux côtés',
+    icon: '🔓',
+    content: `
+      <p>Quand il y a des parenthèses, on <strong>développe d'abord</strong> chaque côté, puis on résout normalement.</p>
+      <div class="lesson-example">
+        <div class="ex-label">⚽ Exemple complet</div>
+        <div class="ex-content">
+          3(x + 2) = 2(x + 5)<br>
+          <span class="step">Développer : 3x + 6 = 2x + 10</span><br>
+          <span class="step">3x − 2x = 10 − 6</span><br>
+          <span class="step">x = <strong>4</strong></span><br>
+          <span class="step">Vérif : 3(4+2) = 3×6 = 18 et 2(4+5) = 2×9 = 18 ✅</span>
+        </div>
+      </div>
+      <div class="lesson-example">
+        <div class="ex-label">⚽ Avec un signe moins</div>
+        <div class="ex-content">
+          5(x − 1) − 2(x + 3) = 8<br>
+          <span class="step">Développer : 5x − 5 − 2x − 6 = 8</span><br>
+          <span class="step">Réduire : 3x − 11 = 8</span><br>
+          <span class="step">3x = 19</span><br>
+          <span class="step">x = <strong>19/3</strong></span>
+        </div>
+      </div>
+      <div class="lesson-tip">
+        <div class="tip-label">⚠️ Attention au − devant la parenthèse</div>
+        −2(x + 3) = −2x − 6, PAS −2x + 3 ! Le − distribue sur TOUS les termes.
+      </div>
+    `,
+    exercise: { question: 'Résous : 4(x − 1) = 2(x + 3)', answer: '5' }
+  },
+  {
+    title: 'Équations avec résultat fractionnaire',
+    icon: '🔢',
+    content: `
+      <p>Parfois, la solution d'une équation est une <strong>fraction</strong>. C'est normal et c'est correct !</p>
+      <div class="lesson-example">
+        <div class="ex-label">⚽ Exemple</div>
+        <div class="ex-content">
+          5x + 2 = 3x + 7<br>
+          <span class="step">5x − 3x = 7 − 2</span><br>
+          <span class="step">2x = 5</span><br>
+          <span class="step">x = 5/2 = <strong>2,5</strong></span><br>
+          <span class="step">Vérif : 5×2,5+2 = 14,5 et 3×2,5+7 = 14,5 ✅</span>
+        </div>
+      </div>
+      <div class="lesson-tip">
+        <div class="tip-label">📌 Ce qu'il faut retenir</div>
+        On peut écrire la réponse en fraction (5/2) ou en décimal (2,5). Au brevet, la fraction est souvent préférée car elle est exacte.
+      </div>
+    `,
+    exercise: { question: 'Résous : 3x + 1 = 10', answer: '3' }
+  }
+],
+difficile: [
+  {
+    title: 'Mise en équation de problèmes',
+    icon: '🧠',
+    content: `
+      <p>La difficulté du brevet, c'est de <strong>traduire un problème en équation</strong>. Il faut bien choisir l'inconnue et écrire les relations.</p>
+      <div class="lesson-example">
+        <div class="ex-label">⚽ Problème type</div>
+        <div class="ex-content">
+          Au stade, il y a 3 fois plus de supporters OL que de supporters adverses. Au total il y a 48 000 spectateurs. Combien de supporters OL ?<br><br>
+          <span class="step">Soit x le nombre de supporters adverses</span><br>
+          <span class="step">Supporters OL = 3x</span><br>
+          <span class="step">Équation : x + 3x = 48 000</span><br>
+          <span class="step">4x = 48 000</span><br>
+          <span class="step">x = 12 000 (supporters adverses)</span><br>
+          <span class="step">Supporters OL = 3 × 12 000 = <strong>36 000</strong></span><br>
+          <span class="step">Vérif : 12 000 + 36 000 = 48 000 ✅</span>
+        </div>
+      </div>
+      <div class="lesson-tip">
+        <div class="tip-label">💡 Méthode en 4 étapes</div>
+        1. <strong>Choisis</strong> l'inconnue (x = quoi ?)<br>
+        2. <strong>Traduis</strong> l'énoncé en expression avec x<br>
+        3. <strong>Résous</strong> l'équation<br>
+        4. <strong>Vérifie</strong> et réponds par une phrase !
+      </div>
+    `,
+    exercise: { question: 'Tom a 3 fois l\'âge de Léa. Ensemble ils ont 32 ans. Âge de Léa ?', answer: '8' }
+  },
+  {
+    title: 'Équations avec fractions',
+    icon: '📐',
+    content: `
+      <p>Quand une équation contient des fractions, la meilleure stratégie est de <strong>multiplier tout par le PPCM des dénominateurs</strong>.</p>
+      <div class="lesson-example">
+        <div class="ex-label">⚽ Exemple</div>
+        <div class="ex-content">
+          (2x+1)/3 = (x+4)/2<br>
+          <span class="step">PPCM de 3 et 2 = 6</span><br>
+          <span class="step">On multiplie tout par 6 :</span><br>
+          <span class="step">6 × (2x+1)/3 = 6 × (x+4)/2</span><br>
+          <span class="step">2(2x+1) = 3(x+4)</span><br>
+          <span class="step">4x + 2 = 3x + 12</span><br>
+          <span class="step">4x − 3x = 12 − 2</span><br>
+          <span class="step">x = <strong>10</strong></span><br>
+          <span class="step">Vérif : (20+1)/3 = 7 et (10+4)/2 = 7 ✅</span>
+        </div>
+      </div>
+      <div class="lesson-tip">
+        <div class="tip-label">📌 Ce qu'il faut retenir</div>
+        Multiplier par le PPCM élimine TOUS les dénominateurs d'un coup. Ensuite c'est une équation classique !
+      </div>
+    `,
+    exercise: { question: 'Résous : x/4 + 1 = x/3', answer: '12' }
+  },
+  {
+    title: 'Problèmes complexes avec mise en équation',
+    icon: '🏆',
+    content: `
+      <p>Les problèmes du brevet combinent souvent <strong>plusieurs étapes</strong> et demandent de bien modéliser la situation.</p>
+      <div class="lesson-example">
+        <div class="ex-label">⚽ Problème avancé</div>
+        <div class="ex-content">
+          Un club vend des maillots à 80€ et des écharpes à 25€. Il vend 120 articles pour un total de 6 850€. Combien de maillots ?<br><br>
+          <span class="step">Soit x le nombre de maillots</span><br>
+          <span class="step">Nombre d'écharpes = 120 − x</span><br>
+          <span class="step">Recette maillots : 80x</span><br>
+          <span class="step">Recette écharpes : 25(120 − x)</span><br>
+          <span class="step">Équation : 80x + 25(120 − x) = 6850</span><br>
+          <span class="step">80x + 3000 − 25x = 6850</span><br>
+          <span class="step">55x = 3850</span><br>
+          <span class="step">x = <strong>70 maillots</strong> (et 50 écharpes)</span><br>
+          <span class="step">Vérif : 70×80 + 50×25 = 5600 + 1250 = 6850€ ✅</span>
+        </div>
+      </div>
+      <div class="lesson-tip">
+        <div class="tip-label">💡 Astuce brevet</div>
+        Quand on a deux quantités dont on connaît le total, pose x pour l'une, l'autre est "total − x". C'est la clé de 90% des problèmes de mise en équation !
+      </div>
+    `,
+    exercise: { question: 'Billets adulte 15€ et enfant 8€. 50 billets, recette 540€. Combien d\'adultes ?', answer: '20' }
+  }
+]
+},
 
-relatifs: [
+relatifs: {
+facile: [
   {
     title: 'Les nombres relatifs : c\'est quoi ?',
     icon: '🌡️',
@@ -2930,7 +4040,157 @@ relatifs: [
     `,
     exercise: { question: '(−7) × (−2) = ?', choices: ['+14', '−14', '+9', '−9'], correct: 0 }
   }
+],
+moyen: [
+  {
+    title: 'Multiplication de relatifs : entraînement',
+    icon: '✖️',
+    content: `
+      <p>Approfondissons la <strong>règle des signes</strong> avec des cas plus complexes : plusieurs facteurs et des fractions.</p>
+      <div class="lesson-formula">Nombre pair de signes − → résultat +<br>Nombre impair de signes − → résultat −</div>
+      <div class="lesson-example">
+        <div class="ex-label">⚽ Plusieurs facteurs</div>
+        <div class="ex-content">
+          (−2) × (+3) × (−4) × (−1)<br>
+          <span class="step">Valeur : 2 × 3 × 4 × 1 = 24</span><br>
+          <span class="step">Signes négatifs : 3 (impair) → résultat négatif</span><br>
+          <span class="step">= <strong>−24</strong></span><br><br>
+          (−1) × (−1) × (−1) × (−1) = ?<br>
+          <span class="step">4 signes négatifs (pair) → <strong>+1</strong></span>
+        </div>
+      </div>
+      <div class="lesson-tip">
+        <div class="tip-label">💡 Astuce</div>
+        Ne calcule pas les produits un par un ! Compte juste les signes moins, puis calcule la valeur absolue du résultat. C'est plus rapide, comme un contre-attaque éclair !
+      </div>
+    `,
+    exercise: { question: '(−3) × (−2) × (+5) × (−1) = ?', choices: ['−30', '+30', '−10', '+10'], correct: 0 }
+  },
+  {
+    title: 'Division de relatifs',
+    icon: '➗',
+    content: `
+      <p>La <strong>division de relatifs</strong> suit exactement la même règle des signes que la multiplication !</p>
+      <div class="lesson-formula">Même signe → résultat positif<br>Signes différents → résultat négatif</div>
+      <div class="lesson-example">
+        <div class="ex-label">⚽ Les 4 cas</div>
+        <div class="ex-content">
+          (+20) ÷ (+4) = <strong>+5</strong> (même signe → +)<br>
+          (−20) ÷ (−4) = <strong>+5</strong> (même signe → +)<br>
+          (+20) ÷ (−4) = <strong>−5</strong> (signes différents → −)<br>
+          (−20) ÷ (+4) = <strong>−5</strong> (signes différents → −)
+        </div>
+      </div>
+      <div class="lesson-tip">
+        <div class="tip-label">📌 Ce qu'il faut retenir</div>
+        La division et la multiplication ont la MÊME règle des signes. Si tu retiens l'une, tu retiens l'autre !<br>
+        Pense au foot : l'arbitre et le VAR (× et ÷) appliquent la même règle.
+      </div>
+    `,
+    exercise: { question: '(−36) ÷ (−9) = ?', choices: ['+4', '−4', '+27', '−27'], correct: 0 }
+  },
+  {
+    title: 'Enchaînements d\'opérations avec relatifs',
+    icon: '🔗',
+    content: `
+      <p>Quand on enchaîne +, −, × et ÷ avec des relatifs, il faut respecter les <strong>priorités opératoires</strong>.</p>
+      <div class="lesson-formula">1. Parenthèses<br>2. × et ÷ (de gauche à droite)<br>3. + et − (de gauche à droite)</div>
+      <div class="lesson-example">
+        <div class="ex-label">⚽ Exemple pas à pas</div>
+        <div class="ex-content">
+          −3 + 4 × (−2) − (−6)<br>
+          <span class="step">Étape 1 (×) : 4 × (−2) = −8</span><br>
+          <span class="step">Étape 2 (−(−)) : −(−6) = +6</span><br>
+          <span class="step">Étape 3 : −3 + (−8) + 6</span><br>
+          <span class="step">= −3 − 8 + 6 = −11 + 6 = <strong>−5</strong></span>
+        </div>
+      </div>
+      <div class="lesson-tip">
+        <div class="tip-label">⚠️ Erreur classique</div>
+        Ne fais pas les opérations de gauche à droite sans respecter les priorités ! La multiplication passe TOUJOURS avant l'addition.
+      </div>
+    `,
+    exercise: { question: '−5 + 3 × (−4) = ?', choices: ['−17', '−8', '8', '−2'], correct: 0 }
+  }
+],
+difficile: [
+  {
+    title: 'Priorités opératoires complexes',
+    icon: '🧮',
+    content: `
+      <p>Les expressions avec des <strong>parenthèses imbriquées</strong> et plusieurs opérations demandent une grande rigueur.</p>
+      <div class="lesson-example">
+        <div class="ex-label">⚽ Exemple type brevet</div>
+        <div class="ex-content">
+          A = −2 × [3 + (−4) × 5] − 7<br>
+          <span class="step">Étape 1 : parenthèses internes → (−4) × 5 = −20</span><br>
+          <span class="step">Étape 2 : crochets → 3 + (−20) = 3 − 20 = −17</span><br>
+          <span class="step">Étape 3 : multiplication → −2 × (−17) = +34</span><br>
+          <span class="step">Étape 4 : soustraction → 34 − 7 = <strong>27</strong></span>
+        </div>
+      </div>
+      <div class="lesson-tip">
+        <div class="tip-label">💡 Méthode</div>
+        Travaille de l'intérieur vers l'extérieur, comme les couches d'un oignon :<br>
+        1. Parenthèses les plus internes<br>
+        2. Puis les crochets<br>
+        3. Puis les × et ÷<br>
+        4. Enfin les + et −
+      </div>
+    `,
+    exercise: { question: '−3 × [2 − (−1) × 4] = ?', choices: ['−18', '18', '−6', '6'], correct: 0 }
+  },
+  {
+    title: 'Expressions littérales avec relatifs',
+    icon: '📝',
+    content: `
+      <p>Combiner le <strong>calcul littéral</strong> et les <strong>relatifs</strong> est un exercice classique du brevet.</p>
+      <div class="lesson-example">
+        <div class="ex-label">⚽ Exemple</div>
+        <div class="ex-content">
+          Calculer A = 3x² − 2x + 5 pour x = −2<br>
+          <span class="step">3 × (−2)² − 2 × (−2) + 5</span><br>
+          <span class="step">3 × 4 − 2 × (−2) + 5</span><br>
+          <span class="step">= 12 − (−4) + 5</span><br>
+          <span class="step">= 12 + 4 + 5</span><br>
+          <span class="step">= <strong>21</strong></span>
+        </div>
+      </div>
+      <div class="lesson-tip">
+        <div class="tip-label">⚠️ Piège classique</div>
+        (−2)² = 4 (le carré d'un négatif est positif)<br>
+        Mais −2² = −4 (on met au carré d'abord, puis le moins)<br>
+        Les parenthèses changent tout ! Comme un hors-jeu : la position exacte compte.
+      </div>
+    `,
+    exercise: { question: 'Si x = −3, combien vaut 2x² + x ?', choices: ['15', '21', '−15', '−21'], correct: 0 }
+  },
+  {
+    title: 'Problèmes avec nombres relatifs',
+    icon: '🏆',
+    content: `
+      <p>Les relatifs apparaissent dans plein de situations concrètes : températures, altitudes, comptes bancaires, différences de buts...</p>
+      <div class="lesson-example">
+        <div class="ex-label">⚽ Problème football</div>
+        <div class="ex-content">
+          La différence de buts de l'OL sur 5 journées : +3, −1, +2, −4, +1<br><br>
+          <span class="step"><strong>a) Différence totale :</strong></span><br>
+          <span class="step">(+3) + (−1) + (+2) + (−4) + (+1)</span><br>
+          <span class="step">= 3 − 1 + 2 − 4 + 1 = <strong>+1</strong></span><br><br>
+          <span class="step"><strong>b) Moyenne :</strong> +1 ÷ 5 = <strong>+0,2</strong> par match</span><br><br>
+          <span class="step"><strong>c) Meilleur match :</strong> +3 (journée 1)</span><br>
+          <span class="step"><strong>d) Étendue :</strong> (+3) − (−4) = +7</span>
+        </div>
+      </div>
+      <div class="lesson-tip">
+        <div class="tip-label">📌 Ce qu'il faut retenir</div>
+        Pour l'étendue avec des relatifs : max − min. Attention, soustraire un négatif revient à additionner ! 3 − (−4) = 3 + 4 = 7.
+      </div>
+    `,
+    exercise: { question: 'Températures : −5, +2, −3, +8, −2. Moyenne = ?', choices: ['0', '+2', '−2', '−1'], correct: 0 }
+  }
 ]
+}
 
 };
 
@@ -2940,12 +4200,16 @@ relatifs: [
 
 let lesson = { topicId: null, steps: [], current: 0 };
 
-function startLesson(topicId) {
-  const steps = LESSONS[topicId];
-  if (!steps) { showToast('❌', 'Cours pas encore disponible'); return; }
-  lesson = { topicId, steps, current: 0 };
+function startLesson(topicId, level) {
+  level = level || 'facile';
+  const topicLessons = LESSONS[topicId];
+  if (!topicLessons) { showToast('❌', 'Cours pas encore disponible'); return; }
+  const steps = topicLessons[level];
+  if (!steps) { showToast('❌', 'Ce niveau n\'est pas encore disponible'); return; }
+  lesson = { topicId, level, steps, current: 0 };
   const t = TOPICS.find(t => t.id === topicId);
-  document.getElementById('lessonTopicLabel').textContent = `📖 ${t ? t.name : topicId}`;
+  const lvlLabel = level === 'facile' ? '🟢 Facile' : level === 'moyen' ? '🔵 Moyen' : '🟡 Difficile';
+  document.getElementById('lessonTopicLabel').textContent = `📖 ${t ? t.name : topicId} — ${lvlLabel}`;
   showScreen('screenLesson');
   renderLessonStep();
 }
