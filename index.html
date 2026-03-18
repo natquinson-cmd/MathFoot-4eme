@@ -1,0 +1,1309 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>MathFoot - Maths & Football</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;700;800&display=swap');
+
+  :root {
+    --bg: #0a1628;
+    --card: #112240;
+    --card2: #0d1b30;
+    --accent: #00e676;
+    --accent2: #1b5e20;
+    --gold: #ffd700;
+    --green: #00e676;
+    --blue: #29b6f6;
+    --red: #ff5252;
+    --pitch: #1a6b1a;
+    --pitch-light: #2e7d32;
+    --text: #e0e0e0;
+    --text2: #8899aa;
+    --radius: 16px;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    font-family: 'Outfit', sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+    overflow-x: hidden;
+  }
+
+  /* ─── PITCH BACKGROUND ─── */
+  .pitch-bg {
+    position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+    pointer-events: none; z-index: 0; overflow: hidden;
+    background: radial-gradient(ellipse at 50% 120%, rgba(26,107,26,0.15) 0%, transparent 60%);
+  }
+  .pitch-line {
+    position: absolute; border: 1px solid rgba(255,255,255,0.03); border-radius: 50%;
+  }
+  .pitch-line.center { width: 300px; height: 300px; top: 50%; left: 50%; transform: translate(-50%,-50%); }
+  .pitch-line.mid { width: 100%; height: 1px; top: 50%; border-radius: 0; background: rgba(255,255,255,0.03); }
+
+  /* ─── FLOATING BALLS ─── */
+  #particles { position: fixed; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; z-index: 0; }
+  .particle {
+    position: absolute; opacity: 0.12; animation: float linear infinite;
+    font-size: 16px;
+  }
+  @keyframes float {
+    0% { transform: translateY(100vh) rotate(0deg); opacity: 0; }
+    10% { opacity: 0.12; }
+    90% { opacity: 0.12; }
+    100% { transform: translateY(-10vh) rotate(720deg); opacity: 0; }
+  }
+
+  /* ─── LAYOUT ─── */
+  .app { position: relative; z-index: 1; max-width: 800px; margin: 0 auto; padding: 16px; }
+
+  /* ─── TOP BAR (SCOREBOARD) ─── */
+  .topbar {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 12px 20px;
+    background: linear-gradient(135deg, var(--card), #0d2137);
+    border-radius: var(--radius); margin-bottom: 16px;
+    flex-wrap: wrap; gap: 10px;
+    border: 1px solid rgba(0,230,118,0.1);
+    box-shadow: 0 4px 20px rgba(0,0,0,0.3);
+  }
+  .topbar-left { display: flex; align-items: center; gap: 12px; }
+  .avatar {
+    width: 52px; height: 52px; border-radius: 50%;
+    background: linear-gradient(135deg, var(--pitch), var(--accent2));
+    display: flex; align-items: center; justify-content: center;
+    font-size: 26px;
+    border: 3px solid var(--gold);
+    box-shadow: 0 0 15px rgba(255,215,0,0.25);
+  }
+  .player-info { display: flex; flex-direction: column; }
+  .player-name { font-weight: 700; font-size: 16px; }
+  .player-title { font-size: 12px; color: var(--gold); font-weight: 600; }
+
+  .topbar-right { display: flex; align-items: center; gap: 14px; }
+  .stat-badge {
+    display: flex; align-items: center; gap: 6px;
+    background: var(--card2); padding: 6px 14px; border-radius: 20px;
+    font-size: 14px; font-weight: 600;
+  }
+  .stat-badge .icon { font-size: 18px; }
+
+  /* ─── XP BAR (SAISON) ─── */
+  .xp-section { margin-bottom: 16px; }
+  .xp-header { display: flex; justify-content: space-between; font-size: 13px; margin-bottom: 6px; color: var(--text2); }
+  .xp-bar-bg {
+    height: 14px; background: var(--card2); border-radius: 7px; overflow: hidden;
+    box-shadow: inset 0 2px 4px rgba(0,0,0,0.4);
+  }
+  .xp-bar-fill {
+    height: 100%; border-radius: 7px;
+    background: linear-gradient(90deg, var(--accent2), var(--green), var(--gold));
+    background-size: 200% 100%;
+    animation: xpShine 3s linear infinite;
+    transition: width 0.8s cubic-bezier(0.4,0,0.2,1);
+  }
+  @keyframes xpShine { 0%{background-position:200% 0} 100%{background-position:-200% 0} }
+
+  /* ─── SCREENS ─── */
+  .screen { display: none; }
+  .screen.active { display: block; }
+
+  /* ─── HOME ─── */
+  .welcome-banner {
+    text-align: center; padding: 30px 20px; margin-bottom: 20px;
+    background: linear-gradient(135deg, #112240, #1a3a2a);
+    border-radius: var(--radius);
+    border: 1px solid rgba(0,230,118,0.08);
+    position: relative; overflow: hidden;
+  }
+  .welcome-banner::before {
+    content: ''; position: absolute; top: 0; left: 0; right: 0; bottom: 0;
+    background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='200' height='200'%3E%3Crect fill='none' stroke='rgba(255,255,255,0.02)' stroke-width='1' x='0' y='0' width='200' height='200'/%3E%3Cline x1='100' y1='0' x2='100' y2='200' stroke='rgba(255,255,255,0.02)' stroke-width='1'/%3E%3Ccircle cx='100' cy='100' r='40' fill='none' stroke='rgba(255,255,255,0.02)' stroke-width='1'/%3E%3C/svg%3E");
+    pointer-events: none;
+  }
+  .welcome-banner h1 { font-size: 32px; font-weight: 800; margin-bottom: 8px; position: relative; }
+  .welcome-banner h1 .foot { color: var(--green); }
+  .welcome-banner p { color: var(--text2); font-size: 15px; position: relative; }
+
+  .section-title {
+    font-size: 18px; font-weight: 700; margin: 20px 0 12px;
+    display: flex; align-items: center; gap: 8px;
+  }
+
+  .topics-grid {
+    display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+    gap: 12px;
+  }
+  .topic-card {
+    background: var(--card); border-radius: var(--radius); padding: 20px;
+    cursor: pointer; transition: all 0.3s; border: 2px solid transparent;
+    position: relative; overflow: hidden;
+  }
+  .topic-card:hover {
+    transform: translateY(-4px); border-color: var(--green);
+    box-shadow: 0 8px 30px rgba(0,230,118,0.15);
+  }
+  .topic-card .emoji { font-size: 36px; margin-bottom: 10px; }
+  .topic-card h3 { font-size: 16px; font-weight: 700; margin-bottom: 4px; }
+  .topic-card p { font-size: 12px; color: var(--text2); margin-bottom: 10px; }
+  .topic-card .difficulty {
+    display: inline-block; font-size: 11px; font-weight: 600;
+    padding: 3px 10px; border-radius: 10px;
+  }
+  .diff-facile { background: rgba(0,230,118,0.15); color: var(--green); }
+  .diff-moyen { background: rgba(41,182,246,0.15); color: var(--blue); }
+  .diff-difficile { background: rgba(255,82,82,0.15); color: var(--red); }
+
+  .topic-progress { margin-top: 10px; height: 4px; background: var(--card2); border-radius: 2px; }
+  .topic-progress-fill { height: 100%; border-radius: 2px; background: var(--green); transition: width 0.5s; }
+
+  .topic-card .best-score {
+    position: absolute; top: 10px; right: 10px; font-size: 11px;
+    color: var(--gold); font-weight: 600;
+  }
+
+  /* ─── QUIZ (MATCH) ─── */
+  .quiz-header {
+    display: flex; justify-content: space-between; align-items: center;
+    margin-bottom: 16px; flex-wrap: wrap; gap: 10px;
+  }
+  .quiz-topic-label {
+    font-size: 14px; font-weight: 600; color: var(--green);
+    background: rgba(0,230,118,0.1); padding: 4px 14px; border-radius: 12px;
+  }
+  .quiz-progress-text { font-size: 14px; color: var(--text2); }
+
+  .score-display {
+    text-align: center; margin-bottom: 16px;
+    font-size: 36px; font-weight: 800; letter-spacing: 4px;
+  }
+  .score-display .home-score { color: var(--green); }
+  .score-display .sep { color: var(--text2); margin: 0 8px; }
+  .score-display .away-score { color: var(--red); }
+
+  .timer-bar {
+    height: 6px; background: var(--card2); border-radius: 3px;
+    margin-bottom: 20px; overflow: hidden;
+  }
+  .timer-fill {
+    height: 100%; border-radius: 3px; background: var(--green);
+    transition: width 0.1s linear, background-color 0.5s;
+  }
+  .timer-fill.warning { background: var(--gold); }
+  .timer-fill.danger { background: var(--red); }
+
+  .question-card {
+    background: var(--card); border-radius: var(--radius); padding: 28px;
+    margin-bottom: 16px; text-align: center;
+    border: 1px solid rgba(0,230,118,0.08);
+    position: relative;
+  }
+  .question-card .q-label {
+    font-size: 12px; color: var(--text2); margin-bottom: 8px;
+    text-transform: uppercase; letter-spacing: 1px;
+  }
+  .question-card .q-text { font-size: 22px; font-weight: 700; line-height: 1.5; }
+  .question-card .q-hint { font-size: 13px; color: var(--text2); margin-top: 10px; font-style: italic; }
+
+  .answers-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 16px; }
+  .answer-btn {
+    background: var(--card); border: 2px solid var(--card2);
+    border-radius: 14px; padding: 16px; font-size: 18px; font-weight: 600;
+    color: var(--text); cursor: pointer; transition: all 0.2s;
+    font-family: 'Outfit', 'Cambria Math', sans-serif;
+  }
+  .answer-btn:hover:not(.disabled) {
+    border-color: var(--green); background: rgba(0,230,118,0.08);
+    transform: scale(1.03);
+  }
+  .answer-btn.correct {
+    border-color: var(--green); background: rgba(0,230,118,0.15);
+    animation: goalPop 0.5s;
+  }
+  .answer-btn.wrong {
+    border-color: var(--red); background: rgba(255,82,82,0.15);
+    animation: shake 0.4s;
+  }
+  .answer-btn.disabled { pointer-events: none; opacity: 0.5; }
+  .answer-btn.show-correct { border-color: var(--green); opacity: 1 !important; }
+
+  @keyframes goalPop { 0%{transform:scale(1)} 50%{transform:scale(1.1)} 100%{transform:scale(1)} }
+  @keyframes shake { 0%,100%{transform:translateX(0)} 25%{transform:translateX(-8px)} 75%{transform:translateX(8px)} }
+
+  .explanation-box {
+    background: var(--card2); border-radius: 12px; padding: 16px;
+    margin-top: 12px; font-size: 14px; line-height: 1.6;
+    border-left: 4px solid var(--green); display: none; text-align: left;
+  }
+  .explanation-box.visible { display: block; animation: fadeIn 0.3s; }
+
+  .input-answer-section { text-align: center; margin-bottom: 16px; }
+  .input-answer {
+    background: var(--card2); border: 2px solid rgba(0,230,118,0.2);
+    border-radius: 12px; padding: 14px 20px; font-size: 22px;
+    color: #fff; text-align: center; width: 200px; font-family: 'Outfit', sans-serif;
+    font-weight: 600; outline: none; transition: border-color 0.3s;
+  }
+  .input-answer:focus { border-color: var(--green); }
+  .validate-btn {
+    display: inline-block; margin-left: 10px; padding: 14px 28px;
+    background: linear-gradient(135deg, var(--accent2), var(--green));
+    border: none; border-radius: 12px; color: #fff; font-size: 16px;
+    font-weight: 700; cursor: pointer; transition: transform 0.2s;
+    font-family: 'Outfit', sans-serif;
+  }
+  .validate-btn:hover { transform: scale(1.05); }
+
+  /* ─── GOAL ANIMATION ─── */
+  .goal-overlay {
+    position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+    display: flex; align-items: center; justify-content: center;
+    z-index: 2000; pointer-events: none; opacity: 0;
+  }
+  .goal-overlay.show { animation: goalFlash 1.2s ease-out forwards; }
+  .goal-text {
+    font-size: 80px; font-weight: 900; color: var(--green);
+    text-shadow: 0 0 40px rgba(0,230,118,0.5), 0 0 80px rgba(0,230,118,0.3);
+    letter-spacing: 8px;
+  }
+  @keyframes goalFlash {
+    0% { opacity: 0; transform: scale(0.3); }
+    20% { opacity: 1; transform: scale(1.2); }
+    60% { opacity: 1; transform: scale(1); }
+    100% { opacity: 0; transform: scale(1.1) translateY(-20px); }
+  }
+
+  /* ─── RESULTS (POST-MATCH) ─── */
+  .results-card {
+    background: var(--card); border-radius: var(--radius); padding: 30px;
+    text-align: center; border: 1px solid rgba(0,230,118,0.08);
+  }
+  .results-emoji { font-size: 64px; margin-bottom: 12px; }
+  .results-title { font-size: 28px; font-weight: 800; margin-bottom: 8px; }
+  .results-subtitle { color: var(--text2); margin-bottom: 20px; font-size: 15px; }
+
+  .match-score-final {
+    font-size: 48px; font-weight: 900; margin-bottom: 20px; letter-spacing: 6px;
+  }
+  .match-score-final .w { color: var(--green); }
+  .match-score-final .l { color: var(--red); }
+  .match-score-final .s { color: var(--text2); }
+
+  .results-stats { display: flex; justify-content: center; gap: 30px; margin-bottom: 24px; flex-wrap: wrap; }
+  .result-stat { text-align: center; }
+  .result-stat .val { font-size: 32px; font-weight: 800; }
+  .result-stat .label { font-size: 12px; color: var(--text2); }
+
+  .xp-gained {
+    display: inline-block; padding: 8px 24px; border-radius: 20px;
+    background: linear-gradient(135deg, var(--accent2), var(--green));
+    font-weight: 700; font-size: 18px; margin-bottom: 20px;
+    animation: goalPop 0.6s;
+  }
+
+  .results-buttons { display: flex; gap: 10px; justify-content: center; flex-wrap: wrap; }
+  .btn {
+    padding: 12px 28px; border-radius: 12px; border: none;
+    font-size: 15px; font-weight: 700; cursor: pointer; transition: all 0.2s;
+    font-family: 'Outfit', sans-serif;
+  }
+  .btn:hover { transform: translateY(-2px); }
+  .btn-primary { background: linear-gradient(135deg, var(--accent2), var(--green)); color: #fff; }
+  .btn-secondary { background: var(--card2); color: var(--text); }
+
+  /* ─── TROPHIES ─── */
+  .achievements-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)); gap: 10px; }
+  .achievement {
+    background: var(--card); border-radius: 14px; padding: 16px; text-align: center;
+    border: 2px solid transparent; transition: all 0.3s;
+  }
+  .achievement.unlocked { border-color: var(--gold); box-shadow: 0 0 20px rgba(255,215,0,0.12); }
+  .achievement.locked { opacity: 0.4; }
+  .achievement .ach-icon { font-size: 36px; margin-bottom: 6px; }
+  .achievement .ach-name { font-size: 13px; font-weight: 700; }
+  .achievement .ach-desc { font-size: 11px; color: var(--text2); margin-top: 4px; }
+
+  /* ─── DAILY ─── */
+  .daily-banner {
+    background: linear-gradient(135deg, #112240, #1a3a2a);
+    border: 2px solid var(--gold);
+    border-radius: var(--radius); padding: 20px; margin-bottom: 16px;
+    cursor: pointer; transition: all 0.3s; text-align: center;
+  }
+  .daily-banner:hover { transform: translateY(-2px); box-shadow: 0 8px 30px rgba(255,215,0,0.15); }
+  .daily-banner h3 { color: var(--gold); font-size: 18px; margin-bottom: 4px; }
+  .daily-banner p { color: var(--text2); font-size: 13px; }
+
+  /* ─── TOAST ─── */
+  .toast-container { position: fixed; top: 20px; right: 20px; z-index: 1000; }
+  .toast {
+    background: var(--card); border-radius: 12px; padding: 14px 20px;
+    margin-bottom: 8px; display: flex; align-items: center; gap: 10px;
+    box-shadow: 0 8px 30px rgba(0,0,0,0.4); animation: slideIn 0.4s, fadeOut 0.4s 2.6s forwards;
+    border-left: 4px solid var(--gold);
+  }
+  .toast .toast-icon { font-size: 24px; }
+  .toast .toast-text { font-size: 14px; font-weight: 600; }
+  @keyframes slideIn { from{transform:translateX(120%);opacity:0} to{transform:translateX(0);opacity:1} }
+  @keyframes fadeOut { to{transform:translateX(120%);opacity:0} }
+  @keyframes fadeIn { from{opacity:0;transform:translateY(10px)} to{opacity:1;transform:translateY(0)} }
+
+  /* ─── COMBO ─── */
+  .combo-display {
+    position: fixed; top: 50%; left: 50%; transform: translate(-50%,-50%);
+    font-size: 56px; font-weight: 800; pointer-events: none; z-index: 999; opacity: 0;
+  }
+  .combo-display.show { animation: comboAnim 1s ease-out forwards; }
+  @keyframes comboAnim {
+    0% { opacity: 1; transform: translate(-50%,-50%) scale(0.5); }
+    50% { opacity: 1; transform: translate(-50%,-50%) scale(1.3); }
+    100% { opacity: 0; transform: translate(-50%,-50%) scale(1.5) translateY(-40px); }
+  }
+
+  /* ─── NAV ─── */
+  .bottom-nav {
+    position: fixed; bottom: 0; left: 0; right: 0;
+    background: var(--card); border-top: 1px solid rgba(0,230,118,0.08);
+    display: flex; justify-content: center; gap: 0; padding: 8px 0; z-index: 100;
+  }
+  .nav-btn {
+    background: none; border: none; color: var(--text2); cursor: pointer;
+    padding: 8px 24px; display: flex; flex-direction: column; align-items: center;
+    gap: 4px; font-family: 'Outfit', sans-serif; transition: color 0.2s;
+  }
+  .nav-btn.active { color: var(--green); }
+  .nav-btn .nav-icon { font-size: 22px; }
+  .nav-btn .nav-label { font-size: 11px; font-weight: 600; }
+
+  .spacer-bottom { height: 80px; }
+
+  /* ─── STATS ─── */
+  .stat-card {
+    background: var(--card); border-radius: var(--radius); padding: 20px; margin-bottom: 12px;
+  }
+  .stat-card h3 { font-size: 14px; color: var(--text2); margin-bottom: 8px; }
+  .stat-card .big-val { font-size: 36px; font-weight: 800; }
+  .stat-row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+
+  /* ─── RESPONSIVE ─── */
+  @media (max-width: 500px) {
+    .answers-grid { grid-template-columns: 1fr; }
+    .question-card .q-text { font-size: 18px; }
+    .topbar { padding: 10px 14px; }
+    .topics-grid { grid-template-columns: 1fr; }
+    .goal-text { font-size: 50px; }
+    .match-score-final { font-size: 36px; }
+  }
+</style>
+</head>
+<body>
+
+<div class="pitch-bg">
+  <div class="pitch-line center"></div>
+  <div class="pitch-line mid"></div>
+</div>
+<div id="particles"></div>
+<div class="toast-container" id="toastContainer"></div>
+<div class="combo-display" id="comboDisplay"></div>
+<div class="goal-overlay" id="goalOverlay"><div class="goal-text">BUUUUT !</div></div>
+
+<div class="app">
+  <!-- SCOREBOARD -->
+  <div class="topbar">
+    <div class="topbar-left">
+      <div class="avatar" id="avatarLevel">⚽</div>
+      <div class="player-info">
+        <div class="player-name" id="playerName">Joueur</div>
+        <div class="player-title" id="playerTitle">Centre de formation</div>
+      </div>
+    </div>
+    <div class="topbar-right">
+      <div class="stat-badge"><span class="icon">🔥</span><span id="streakDisplay">0</span></div>
+      <div class="stat-badge"><span class="icon">⚽</span><span id="totalXpDisplay">0</span> pts</div>
+    </div>
+  </div>
+
+  <!-- SAISON BAR -->
+  <div class="xp-section">
+    <div class="xp-header">
+      <span>Division <strong id="levelDisplay">1</strong></span>
+      <span><span id="currentXp">0</span> / <span id="nextXp">100</span> pts pour monter</span>
+    </div>
+    <div class="xp-bar-bg"><div class="xp-bar-fill" id="xpFill" style="width:0%"></div></div>
+  </div>
+
+  <!-- ═══ HOME ═══ -->
+  <div class="screen active" id="screenHome">
+    <div class="welcome-banner">
+      <h1>Math<span class="foot">Foot</span> ⚽</h1>
+      <p>De l'OL au Real Madrid, marque des buts en résolvant des maths !</p>
+    </div>
+
+    <div class="daily-banner" id="dailyBanner" onclick="startDaily()">
+      <h3>🏆 Match du jour — OL vs Real</h3>
+      <p>10 tirs au but au Groupama Stadium — Points doublés !</p>
+      <p id="dailyStatus" style="margin-top:6px;font-size:12px;color:var(--green);"></p>
+    </div>
+
+    <div class="section-title">⚽ Entraînements</div>
+    <div class="topics-grid" id="topicsGrid"></div>
+
+    <div class="section-title">🏆 Palmarès</div>
+    <div class="achievements-grid" id="achievementsHome"></div>
+
+    <div class="spacer-bottom"></div>
+  </div>
+
+  <!-- ═══ QUIZ (MATCH) ═══ -->
+  <div class="screen" id="screenQuiz">
+    <div class="quiz-header">
+      <span class="quiz-topic-label" id="quizTopicLabel"></span>
+      <span class="quiz-progress-text" id="quizProgress"></span>
+    </div>
+    <div class="score-display">
+      <span class="home-score" id="liveGoals">0</span>
+      <span class="sep">-</span>
+      <span class="away-score" id="liveMisses">0</span>
+    </div>
+    <div class="timer-bar"><div class="timer-fill" id="timerFill"></div></div>
+    <div class="question-card">
+      <div class="q-label" id="qLabel">Tir n°1</div>
+      <div class="q-text" id="qText"></div>
+      <div class="q-hint" id="qHint"></div>
+    </div>
+    <div class="answers-grid" id="answersGrid"></div>
+    <div class="input-answer-section" id="inputSection" style="display:none;">
+      <input type="text" class="input-answer" id="inputAnswer" placeholder="?" autocomplete="off">
+      <button class="validate-btn" onclick="validateInput()">Tire ! ⚽</button>
+    </div>
+    <div class="explanation-box" id="explanationBox"></div>
+    <div style="text-align:center;margin-top:12px;">
+      <button class="btn btn-primary" id="nextBtn" style="display:none;" onclick="nextQuestion()">Tir suivant →</button>
+    </div>
+  </div>
+
+  <!-- ═══ RESULTS (POST-MATCH) ═══ -->
+  <div class="screen" id="screenResults">
+    <div class="results-card">
+      <div class="results-emoji" id="resultsEmoji">⚽</div>
+      <div class="results-title" id="resultsTitle">Fin du match !</div>
+      <div class="match-score-final" id="matchScoreFinal"></div>
+      <div class="results-subtitle" id="resultsSub"></div>
+      <div class="xp-gained" id="xpGained"></div>
+      <div class="results-stats">
+        <div class="result-stat"><div class="val" id="resScore" style="color:var(--green)">0</div><div class="label">Buts</div></div>
+        <div class="result-stat"><div class="val" id="resStreak" style="color:var(--gold)">0</div><div class="label">Meilleur enchaînement</div></div>
+        <div class="result-stat"><div class="val" id="resTime" style="color:var(--blue)">0</div><div class="label">Temps moyen / tir</div></div>
+      </div>
+      <div class="results-buttons">
+        <button class="btn btn-primary" onclick="retryQuiz()">🔄 Revanche</button>
+        <button class="btn btn-secondary" onclick="showScreen('screenHome')">🏠 Vestiaires</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══ STATS ═══ -->
+  <div class="screen" id="screenStats">
+    <div class="section-title">📊 Statistiques de carrière</div>
+    <div class="stat-row">
+      <div class="stat-card"><h3>Total points</h3><div class="big-val" id="statTotalXp" style="color:var(--green)">0</div></div>
+      <div class="stat-card"><h3>Division</h3><div class="big-val" id="statLevel" style="color:var(--blue)">1</div></div>
+    </div>
+    <div class="stat-row">
+      <div class="stat-card"><h3>Tirs tentés</h3><div class="big-val" id="statSolved" style="color:var(--green)">0</div></div>
+      <div class="stat-card"><h3>% de réussite</h3><div class="big-val" id="statRate" style="color:var(--gold)">0%</div></div>
+    </div>
+    <div class="stat-row">
+      <div class="stat-card"><h3>Meilleur enchaînement</h3><div class="big-val" id="statStreak" style="color:var(--red)">0</div></div>
+      <div class="stat-card"><h3>Jours d'entraînement</h3><div class="big-val" id="statDays" style="color:var(--gold)">0</div></div>
+    </div>
+    <div class="section-title">🏆 Palmarès complet</div>
+    <div class="achievements-grid" id="achievementsStats"></div>
+    <div class="spacer-bottom"></div>
+  </div>
+</div>
+
+<!-- BOTTOM NAV -->
+<div class="bottom-nav">
+  <button class="nav-btn active" onclick="showScreen('screenHome')" id="navHome">
+    <span class="nav-icon">🏟️</span><span class="nav-label">Stade</span>
+  </button>
+  <button class="nav-btn" onclick="showScreen('screenStats')" id="navStats">
+    <span class="nav-icon">📊</span><span class="nav-label">Carrière</span>
+  </button>
+</div>
+
+<script>
+// ══════════════════════════════════════
+// DATA & STATE
+// ══════════════════════════════════════
+
+const TITLES = [
+  [0, 'Centre de formation OL'],
+  [100, 'Remplaçant OL'],
+  [300, 'Titulaire à Lyon'],
+  [600, 'Capitaine de l\'OL'],
+  [1000, 'Sélectionné en Bleus'],
+  [1600, 'Titulaire Équipe de France'],
+  [2500, 'Star du Real Madrid'],
+  [4000, 'Ballon d\'Or comme Mbappé'],
+  [6000, 'Légende OL + Real + Bleus']
+];
+
+const PLAYERS = ['Mbappé','Lacazette','Cherki','Tolisso','Caqueret','Griezmann','Benzema','Tchouaméni','Vinícius Jr','Bellingham'];
+const TEAMS = ['l\'OL','le Real Madrid','l\'Équipe de France','Lyon','le Real'];
+const STADES = ['au Parc OL (Groupama Stadium)','au Santiago Bernabéu','au Stade de France'];
+function rPlayer() { return PLAYERS[randInt(0, PLAYERS.length-1)]; }
+function rTeam() { return TEAMS[randInt(0, TEAMS.length-1)]; }
+function rStade() { return STADES[randInt(0, STADES.length-1)]; }
+
+const ACHIEVEMENTS = [
+  { id:'first_quiz', icon:'⚽', name:'Début à l\'OL', desc:'Joue ton premier match', check: s => s.totalSolved >= 5 },
+  { id:'streak_3', icon:'🎩', name:'Hat-trick', desc:'3 buts comme Mbappé', check: s => s.bestStreak >= 3 },
+  { id:'streak_5', icon:'🔥', name:'En feu !', desc:'5 buts d\'affilée', check: s => s.bestStreak >= 5 },
+  { id:'streak_10', icon:'💫', name:'Mode Mbappé', desc:'10 buts d\'affilée !', check: s => s.bestStreak >= 10 },
+  { id:'perfect', icon:'🥇', name:'Clean sheet', desc:'10/10 comme un vrai Bleu', check: s => s.perfectQuizzes >= 1 },
+  { id:'xp_500', icon:'🏅', name:'Trophée Ligue 1', desc:'Accumule 500 points', check: s => s.totalXp >= 500 },
+  { id:'xp_2000', icon:'🏆', name:'Champions League', desc:'Accumule 2000 points', check: s => s.totalXp >= 2000 },
+  { id:'solved_50', icon:'👟', name:'50 tirs', desc:'Comme à l\'entraînement OL', check: s => s.totalSolved >= 50 },
+  { id:'solved_200', icon:'⭐', name:'200 tirs', desc:'Digne du Bernabéu', check: s => s.totalSolved >= 200 },
+  { id:'daily_3', icon:'📅', name:'Pro du Parc OL', desc:'3 matchs du jour joués', check: s => s.dailyCompleted >= 3 },
+  { id:'speed', icon:'⚡', name:'Vitesse Mbappé', desc:'But en moins de 3s', check: s => s.fastAnswer },
+  { id:'all_topics', icon:'🇫🇷', name:'International', desc:'Joue tous les entraînements', check: s => s.topicsPlayed >= TOPICS.length },
+  { id:'level_5', icon:'👑', name:'Galactique', desc:'Atteins la division 5', check: s => s.level >= 5 },
+];
+
+const TOPICS = [
+  { id:'calcul_litteral', emoji:'📝', name:'Calcul littéral', desc:'Développer, factoriser, réduire', diff:'moyen', foot:'Dribble technique' },
+  { id:'fractions', emoji:'🍕', name:'Fractions', desc:'Opérations sur les fractions', diff:'moyen', foot:'Passes millimétrées' },
+  { id:'puissances', emoji:'⚡', name:'Puissances', desc:'Règles de calcul des puissances', diff:'moyen', foot:'Frappes puissantes' },
+  { id:'pythagore', emoji:'📐', name:'Pythagore', desc:'Théorème de Pythagore', diff:'difficile', foot:'Angles de tir' },
+  { id:'proportionnalite', emoji:'⚖️', name:'Proportionnalité', desc:'Pourcentages, échelles', diff:'facile', foot:'Statistiques d\'équipe' },
+  { id:'statistiques', emoji:'📊', name:'Statistiques', desc:'Moyenne, médiane, étendue', diff:'facile', foot:'Analyse de match' },
+  { id:'equations', emoji:'🔍', name:'Équations', desc:'Résoudre des équations', diff:'difficile', foot:'Stratégie tactique' },
+  { id:'relatifs', emoji:'➕', name:'Nombres relatifs', desc:'Opérations avec les relatifs', diff:'facile', foot:'Différence de buts' },
+];
+
+let state;
+function loadState() {
+  const saved = localStorage.getItem('mathfoot_state');
+  const defaults = {
+    totalXp: 0, level: 1, currentXp: 0,
+    bestStreak: 0, totalSolved: 0, totalCorrect: 0,
+    perfectQuizzes: 0, dailyCompleted: 0, fastAnswer: false,
+    topicsPlayed: 0, topicsBest: {}, achievements: [],
+    lastDaily: null, dailyStreak: 0, lastPlayDate: null,
+    topicsPlayedSet: []
+  };
+  state = saved ? { ...defaults, ...JSON.parse(saved) } : defaults;
+}
+function saveState() { localStorage.setItem('mathfoot_state', JSON.stringify(state)); }
+
+// ══════════════════════════════════════
+// QUESTION GENERATORS
+// ══════════════════════════════════════
+
+function randInt(a, b) { return Math.floor(Math.random() * (b - a + 1)) + a; }
+function shuffle(arr) { for(let i=arr.length-1;i>0;i--){const j=randInt(0,i);[arr[i],arr[j]]=[arr[j],arr[i]];} return arr; }
+function gcd(a,b) { a=Math.abs(a); b=Math.abs(b); while(b){[a,b]=[b,a%b];} return a; }
+function simplifyFrac(n,d) { const g=gcd(n,d); return [n/g, d/g]; }
+
+const generators = {
+
+  calcul_litteral() {
+    const type = randInt(1, 4);
+    if (type === 1) {
+      const k = randInt(2, 9), a = randInt(1, 10), b = randInt(1, 10);
+      const sign = Math.random() > 0.5 ? '+' : '-';
+      const expr = `${k}(${a}x ${sign} ${b})`;
+      const r1 = k * a, r2 = sign === '+' ? k * b : -k * b;
+      const answer = r2 >= 0 ? `${r1}x + ${r2}` : `${r1}x - ${Math.abs(r2)}`;
+      return {
+        question: `Développe : ${expr}`,
+        answer, type: 'mcq',
+        choices: generateChoices(answer, [`${r1}x + ${b}`, `${k+a}x + ${r2}`, `${r1}x ${sign} ${b}`, `${r1+r2}x`]),
+        explanation: `${k} × ${a}x = ${r1}x et ${k} × ${sign === '-' ? '(-' : ''}${b}${sign === '-' ? ')' : ''} = ${r2}`
+      };
+    } else if (type === 2) {
+      const a = randInt(2, 8), b = randInt(1, 6), c = randInt(1, 5), d = randInt(1, 8);
+      const rx = a + c, rn = b + d;
+      const answer = `${rx}x + ${rn}`;
+      return {
+        question: `Réduis : ${a}x + ${b} + ${c}x + ${d}`,
+        answer, type: 'mcq',
+        choices: generateChoices(answer, [`${a+b}x + ${c+d}`, `${rx}x + ${b}`, `${a}x + ${rn}`]),
+        explanation: `(${a}x + ${c}x) + (${b} + ${d}) = ${rx}x + ${rn}`
+      };
+    } else if (type === 3) {
+      const a = randInt(1, 5), b = randInt(1, 5), c = randInt(1, 5), d = randInt(1, 5);
+      const x2 = a*c, x1 = a*d + b*c, x0 = b*d;
+      const answer = `${x2}x² + ${x1}x + ${x0}`;
+      return {
+        question: `Développe : (${a}x + ${b})(${c}x + ${d})`,
+        answer, type: 'mcq',
+        choices: generateChoices(answer, [`${x2}x² + ${a*d}x + ${x0}`, `${x2}x² + ${x1}x + ${b+d}`, `${a+c}x² + ${x1}x + ${x0}`]),
+        explanation: `= ${a}x×${c}x + ${a}x×${d} + ${b}×${c}x + ${b}×${d} = ${answer}`
+      };
+    } else {
+      const k = randInt(2, 9), b = randInt(1, 10);
+      const answer = `${k}(x + ${b})`;
+      return {
+        question: `Factorise : ${k}x + ${k*b}`,
+        answer, type: 'mcq',
+        choices: generateChoices(answer, [`${k}(x + ${k})`, `x(${k} + ${b})`, `${k}x(1 + ${b})`]),
+        explanation: `Facteur commun ${k} : ${k}×x + ${k}×${b} = ${k}(x + ${b})`
+      };
+    }
+  },
+
+  fractions() {
+    const type = randInt(1, 3);
+    if (type === 1) {
+      const d = randInt(2, 9), a = randInt(1, d-1), b = randInt(1, d-1);
+      const [rn, rd] = simplifyFrac(a+b, d);
+      const answer = rd === 1 ? `${rn}` : `${rn}/${rd}`;
+      return {
+        question: `Calcule : ${a}/${d} + ${b}/${d}`,
+        answer, type: 'mcq',
+        choices: generateChoices(answer, [`${a+b}/${d+d}`, `${a*b}/${d}`, `${a}/${d+b}`]),
+        explanation: `Même dénominateur : (${a}+${b})/${d} = ${a+b}/${d}${rd!==d?' = '+answer:''}`
+      };
+    } else if (type === 2) {
+      const a = randInt(1,7), b = randInt(2,7), c = randInt(1,7), d = randInt(2,7);
+      const [rn, rd] = simplifyFrac(a*c, b*d);
+      const answer = rd === 1 ? `${rn}` : `${rn}/${rd}`;
+      return {
+        question: `Calcule : ${a}/${b} × ${c}/${d}`,
+        answer, type: 'mcq',
+        choices: generateChoices(answer, [`${a+c}/${b+d}`, `${a*c}/${b+d}`, `${a*d}/${b*c}`]),
+        explanation: `(${a}×${c})/(${b}×${d}) = ${a*c}/${b*d}${answer !== a*c+'/'+b*d ? ' = '+answer : ''}`
+      };
+    } else {
+      const d1 = randInt(2,6), d2 = d1 * randInt(2,3);
+      const a = randInt(1, d1-1), b = randInt(1, d2-1);
+      const mult = d2/d1, num = a*mult + b;
+      const [rn, rd] = simplifyFrac(num, d2);
+      const answer = rd === 1 ? `${rn}` : `${rn}/${rd}`;
+      return {
+        question: `Calcule : ${a}/${d1} + ${b}/${d2}`,
+        answer, type: 'mcq',
+        choices: generateChoices(answer, [`${a+b}/${d1+d2}`, `${a+b}/${d2}`, `${a*b}/${d1*d2}`]),
+        explanation: `${a}/${d1} = ${a*mult}/${d2}, donc ${a*mult}/${d2} + ${b}/${d2} = ${num}/${d2}${answer !== num+'/'+d2 ? ' = '+answer : ''}`
+      };
+    }
+  },
+
+  puissances() {
+    const type = randInt(1, 4);
+    if (type === 1) {
+      const base = randInt(2,5), exp = randInt(2,4);
+      const answer = Math.pow(base,exp).toString();
+      return {
+        question: `Calcule : ${base}^${exp}`,
+        answer, type: 'mcq',
+        choices: generateChoices(answer, [`${base*exp}`, `${Math.pow(base,exp-1)}`, `${Math.pow(base,exp+1)}`]),
+        explanation: `${base}^${exp} = ${Array(exp).fill(base).join(' × ')} = ${answer}`
+      };
+    } else if (type === 2) {
+      const a = randInt(2,5), m = randInt(1,4), n = randInt(1,4);
+      const answer = `${a}^${m+n}`;
+      return {
+        question: `Simplifie : ${a}^${m} × ${a}^${n}`,
+        answer, type: 'mcq',
+        choices: generateChoices(answer, [`${a}^${m*n}`, `${a*a}^${m+n}`, `${a}^${Math.abs(m-n)}`]),
+        explanation: `a^m × a^n = a^(m+n) → ${a}^${m+n}`
+      };
+    } else if (type === 3) {
+      const coef = randInt(1,9), exp = randInt(3,8);
+      const num = coef * Math.pow(10,exp);
+      const answer = `${coef} × 10^${exp}`;
+      return {
+        question: `Notation scientifique : ${num.toLocaleString('fr-FR')}`,
+        answer, type: 'mcq',
+        choices: generateChoices(answer, [`${coef} × 10^${exp-1}`, `${coef}0 × 10^${exp-1}`, `${coef} × 10^${exp+1}`]),
+        explanation: `On déplace la virgule de ${exp} rangs : ${answer}`
+      };
+    } else {
+      const a = randInt(2,4), m = randInt(2,3), n = randInt(2,3);
+      const answer = `${a}^${m*n}`;
+      return {
+        question: `Simplifie : (${a}^${m})^${n}`,
+        answer, type: 'mcq',
+        choices: generateChoices(answer, [`${a}^${m+n}`, `${a}^${m}`, `${Math.pow(a,m)}^${n}`]),
+        explanation: `(a^m)^n = a^(m×n) → ${a}^${m*n}`
+      };
+    }
+  },
+
+  pythagore() {
+    const triplets = [[3,4,5],[5,12,13],[6,8,10],[8,15,17],[9,12,15],[7,24,25]];
+    const [a,b,c] = triplets[randInt(0, triplets.length-1)];
+    const stade = rStade();
+    const type = randInt(1, 3);
+    if (type === 1) {
+      return {
+        question: `${rPlayer()} tire ${stade}. La distance au but forme un triangle de côtés ${a}m et ${b}m. Quelle est la diagonale ?`,
+        hint: 'c² = a² + b²',
+        answer: c.toString(), type: 'mcq',
+        choices: generateChoices(c.toString(), [`${a+b}`, `${Math.round(Math.sqrt(a*a+b*b)+1)}`, `${a*b/2}`]),
+        explanation: `c² = ${a}² + ${b}² = ${a*a} + ${b*b} = ${c*c} → c = ${c}m`
+      };
+    } else if (type === 2) {
+      return {
+        question: `La passe de ${rPlayer()} parcourt ${c}m en diagonale, ${b}m en longueur. Quelle largeur ?`,
+        hint: 'a² = c² - b²',
+        answer: a.toString(), type: 'mcq',
+        choices: generateChoices(a.toString(), [`${c-b}`, `${Math.round(Math.sqrt(c*c-b*b)+1)}`, `${c+b}`]),
+        explanation: `a² = ${c}² - ${b}² = ${c*c} - ${b*b} = ${a*a} → a = ${a}m`
+      };
+    } else {
+      const isRight = Math.random() > 0.4;
+      let x,y,z;
+      if (isRight) { [x,y,z] = [a,b,c]; } else { x=a; y=b; z=c+randInt(1,3); }
+      return {
+        question: `Zone d'entraînement ${stade} : côtés ${x}m, ${y}m, ${z}m. Est-elle rectangle ?`,
+        hint: 'Vérifie si a² + b² = c²',
+        answer: isRight ? 'Oui' : 'Non', type: 'mcq',
+        choices: [{ text:'Oui', value:'Oui' }, { text:'Non', value:'Non' }],
+        explanation: `${x}² + ${y}² = ${x*x+y*y} et ${z}² = ${z*z}. ${x*x+y*y===z*z?'Égaux → rectangle':'Différents → pas rectangle'}.`
+      };
+    }
+  },
+
+  proportionnalite() {
+    const type = randInt(1, 3);
+    if (type === 1) {
+      const pct = [10,15,20,25,30,40,50,75][randInt(0,7)];
+      const base = randInt(2,20) * 10;
+      const answer = (base*pct/100).toString();
+      const items = [`Un maillot de ${rTeam()}`,`Un billet ${rStade()}`,`Une écharpe de ${rTeam()}`];
+      return {
+        question: `${items[randInt(0,items.length-1)]} à ${base}€ soldé de ${pct}%. Combien de réduction ?`,
+        answer, type: 'input',
+        explanation: `${pct}/100 × ${base} = ${answer}€`
+      };
+    } else if (type === 2) {
+      const x = randInt(2,8), y = randInt(10,50), k = randInt(2,5);
+      const answer = (y*k).toString();
+      return {
+        question: `${x} places ${rStade()} coûtent ${y}€. Prix de ${x*k} places ?`,
+        answer, type: 'input',
+        explanation: `${x*k} ÷ ${x} = ${k}, donc ${y} × ${k} = ${answer}€`
+      };
+    } else {
+      const goals = randInt(3,12), matches = randInt(5,15);
+      const targetMatches = matches * randInt(2,4);
+      const answer = Math.round(goals * targetMatches / matches).toString();
+      return {
+        question: `${rPlayer()} marque ${goals} buts en ${matches} matchs avec ${rTeam()}. Combien en ${targetMatches} matchs ?`,
+        answer, type: 'input',
+        explanation: `${goals} × ${targetMatches} ÷ ${matches} = ${answer} buts`
+      };
+    }
+  },
+
+  statistiques() {
+    const type = randInt(1, 3);
+    const n = randInt(4, 7);
+    const vals = Array.from({length:n}, () => randInt(0, 5));
+    const player = rPlayer();
+    if (type === 1) {
+      const sum = vals.reduce((a,b) => a+b, 0);
+      const mean = sum / n;
+      const answer = Number.isInteger(mean) ? mean.toString() : mean.toFixed(1);
+      return {
+        question: `Buts de ${player} par match : ${vals.join(', ')}. Quelle est sa moyenne ?`,
+        answer, type: 'input',
+        explanation: `(${vals.join(' + ')}) ÷ ${n} = ${sum} ÷ ${n} = ${answer}`
+      };
+    } else if (type === 2) {
+      const sorted = [...vals].sort((a,b) => a-b);
+      const etendue = sorted[sorted.length-1] - sorted[0];
+      return {
+        question: `Buts de ${player} par match : ${vals.join(', ')}. Quelle étendue ?`,
+        hint: 'Étendue = max - min',
+        answer: etendue.toString(), type: 'input',
+        explanation: `Max = ${sorted[sorted.length-1]}, Min = ${sorted[0]}, Étendue = ${etendue}`
+      };
+    } else {
+      const sorted = [...vals].sort((a,b) => a-b);
+      const mid = Math.floor(sorted.length/2);
+      const mediane = sorted.length%2===1 ? sorted[mid] : (sorted[mid-1]+sorted[mid])/2;
+      const answer = Number.isInteger(mediane) ? mediane.toString() : mediane.toFixed(1);
+      return {
+        question: `Buts de ${player} par match : ${vals.join(', ')}. Médiane ?`,
+        hint: 'Trie les valeurs d\'abord !',
+        answer, type: 'input',
+        explanation: `Trié : ${sorted.join(', ')}. Médiane = ${answer}`
+      };
+    }
+  },
+
+  equations() {
+    const type = randInt(1, 3);
+    if (type === 1) {
+      const a = randInt(2,9), x = randInt(-8,8), b = randInt(1,15);
+      const c = a*x + b;
+      return {
+        question: `Résous : ${a}x + ${b} = ${c}`,
+        answer: x.toString(), type: 'input',
+        explanation: `${a}x = ${c} - ${b} = ${c-b}, x = ${c-b}/${a} = ${x}`
+      };
+    } else if (type === 2) {
+      const a = randInt(3,9), c = randInt(1, a-1), x = randInt(-5,5), b = randInt(1,10);
+      const d = (a-c)*x + b;
+      return {
+        question: `Résous : ${a}x + ${b} = ${c}x + ${d}`,
+        answer: x.toString(), type: 'input',
+        explanation: `${a-c}x = ${d-b} → x = ${x}`
+      };
+    } else {
+      const a = randInt(2,6), x = randInt(-6,6), b = randInt(1,8);
+      const c = a*(x+b);
+      return {
+        question: `Résous : ${a}(x + ${b}) = ${c}`,
+        answer: x.toString(), type: 'input',
+        explanation: `x + ${b} = ${c/a}, x = ${c/a} - ${b} = ${x}`
+      };
+    }
+  },
+
+  relatifs() {
+    const type = randInt(1, 4);
+    if (type === 1) {
+      const a = randInt(-15,15), b = randInt(-15,15);
+      return {
+        question: `Diff. de buts de ${rTeam()} : (${a}) + (${b}) = ?`,
+        answer: (a+b).toString(), type: 'input',
+        explanation: `${a} + (${b}) = ${a+b}`
+      };
+    } else if (type === 2) {
+      const a = randInt(-12,12), b = randInt(-12,12);
+      return {
+        question: `Classement : (${a}) - (${b}) = ?`,
+        answer: (a-b).toString(), type: 'input',
+        explanation: `${a} - (${b}) = ${a} + (${-b}) = ${a-b}`
+      };
+    } else if (type === 3) {
+      let a = randInt(-9,9), b = randInt(-9,9);
+      if (a===0||b===0) return generators.relatifs();
+      return {
+        question: `Calcule : (${a}) × (${b})`,
+        answer: (a*b).toString(), type: 'input',
+        explanation: `${Math.abs(a)} × ${Math.abs(b)} = ${Math.abs(a*b)}. ${(a>0)===(b>0)?'Même signe → +':'Signes diff. → -'} → ${a*b}`
+      };
+    } else {
+      const a = randInt(-9,-1), b = randInt(-9,-1), c = randInt(-9,-1);
+      return {
+        question: `Calcule : (${a}) × (${b}) × (${c})`,
+        answer: (a*b*c).toString(), type: 'input',
+        explanation: `3 négatifs (impair) → résultat négatif. ${Math.abs(a)}×${Math.abs(b)}×${Math.abs(c)} = ${Math.abs(a*b*c)} → ${a*b*c}`
+      };
+    }
+  }
+};
+
+function generateChoices(correct, wrongs) {
+  const choices = [{ text: correct, value: correct }];
+  const used = new Set([correct]);
+  for (const w of shuffle(wrongs)) {
+    if (!used.has(w) && choices.length < 4) { choices.push({ text:w, value:w }); used.add(w); }
+  }
+  while (choices.length < 4) {
+    const f = `${randInt(1,50)}`;
+    if (!used.has(f)) { choices.push({ text:f, value:f }); used.add(f); }
+  }
+  return shuffle(choices);
+}
+
+// ══════════════════════════════════════
+// QUIZ ENGINE
+// ══════════════════════════════════════
+
+let quiz = {
+  topic: null, questions: [], current: 0, score: 0, misses: 0,
+  streak: 0, bestStreak: 0, xpEarned: 0, isDaily: false,
+  times: [], questionStart: 0, timerInterval: null, timeLimit: 30
+};
+
+function startQuiz(topicId) {
+  const questions = [];
+  for (let i = 0; i < 10; i++) questions.push(generators[topicId]());
+  quiz = {
+    topic: topicId, questions, current: 0, score: 0, misses: 0,
+    streak: 0, bestStreak: 0, xpEarned: 0, isDaily: false,
+    times: [], questionStart: 0, timerInterval: null, timeLimit: 30
+  };
+  if (!state.topicsPlayedSet.includes(topicId)) {
+    state.topicsPlayedSet.push(topicId);
+    state.topicsPlayed = state.topicsPlayedSet.length;
+    saveState();
+  }
+  showScreen('screenQuiz');
+  const t = TOPICS.find(t => t.id === topicId);
+  document.getElementById('quizTopicLabel').textContent = t ? `${t.emoji} ${t.foot}` : 'Match du jour';
+  updateLiveScore();
+  showQuestion();
+}
+
+function startDaily() {
+  const today = new Date().toDateString();
+  if (state.lastDaily === today) { showToast('✅', 'Déjà joué aujourd\'hui !'); return; }
+  const allTopics = TOPICS.map(t => t.id);
+  const questions = [];
+  for (let i = 0; i < 10; i++) questions.push(generators[allTopics[randInt(0, allTopics.length-1)]]());
+  quiz = {
+    topic: 'daily', questions, current: 0, score: 0, misses: 0,
+    streak: 0, bestStreak: 0, xpEarned: 0, isDaily: true,
+    times: [], questionStart: 0, timerInterval: null, timeLimit: 30
+  };
+  showScreen('screenQuiz');
+  document.getElementById('quizTopicLabel').textContent = '🏆 Match du jour';
+  updateLiveScore();
+  showQuestion();
+}
+
+function updateLiveScore() {
+  document.getElementById('liveGoals').textContent = quiz.score;
+  document.getElementById('liveMisses').textContent = quiz.misses;
+}
+
+function showQuestion() {
+  const q = quiz.questions[quiz.current];
+  document.getElementById('quizProgress').textContent = `Tir ${quiz.current+1} / ${quiz.questions.length}`;
+  document.getElementById('qText').innerHTML = q.question;
+  document.getElementById('qHint').textContent = q.hint || '';
+  document.getElementById('qLabel').textContent = `⚽ Tir n°${quiz.current+1}`;
+  document.getElementById('explanationBox').classList.remove('visible');
+  document.getElementById('nextBtn').style.display = 'none';
+
+  const answersGrid = document.getElementById('answersGrid');
+  const inputSection = document.getElementById('inputSection');
+
+  if (q.type === 'mcq') {
+    inputSection.style.display = 'none';
+    answersGrid.style.display = 'grid';
+    answersGrid.innerHTML = '';
+    q.choices.forEach(c => {
+      const btn = document.createElement('button');
+      btn.className = 'answer-btn';
+      btn.innerHTML = c.text;
+      btn.onclick = () => checkAnswer(c.value, q, btn);
+      answersGrid.appendChild(btn);
+    });
+  } else {
+    answersGrid.style.display = 'none';
+    inputSection.style.display = 'block';
+    const input = document.getElementById('inputAnswer');
+    input.value = ''; input.disabled = false; input.focus();
+    document.querySelector('.validate-btn').disabled = false;
+    input.onkeydown = (e) => { if (e.key === 'Enter') validateInput(); };
+  }
+
+  quiz.questionStart = Date.now();
+  startTimer();
+}
+
+function startTimer() {
+  clearInterval(quiz.timerInterval);
+  const fill = document.getElementById('timerFill');
+  fill.style.width = '100%'; fill.className = 'timer-fill';
+  const start = Date.now();
+  quiz.timerInterval = setInterval(() => {
+    const elapsed = (Date.now() - start) / 1000;
+    const pct = Math.max(0, 100 - (elapsed / quiz.timeLimit * 100));
+    fill.style.width = pct + '%';
+    if (pct < 20) fill.className = 'timer-fill danger';
+    else if (pct < 50) fill.className = 'timer-fill warning';
+    if (elapsed >= quiz.timeLimit) { clearInterval(quiz.timerInterval); timeUp(); }
+  }, 100);
+}
+
+function timeUp() {
+  const q = quiz.questions[quiz.current];
+  quiz.streak = 0; quiz.misses++;
+  quiz.times.push(quiz.timeLimit);
+  updateLiveScore();
+  showExplanation(q, false);
+  disableAnswers(q);
+}
+
+function validateInput() {
+  const val = document.getElementById('inputAnswer').value.trim().replace(',', '.');
+  const q = quiz.questions[quiz.current];
+  checkAnswer(val, q, null);
+}
+
+function checkAnswer(value, q, btnEl) {
+  clearInterval(quiz.timerInterval);
+  const elapsed = (Date.now() - quiz.questionStart) / 1000;
+  quiz.times.push(elapsed);
+
+  const isCorrect = normalizeAnswer(value) === normalizeAnswer(q.answer);
+
+  if (isCorrect) {
+    quiz.score++;
+    quiz.streak++;
+    if (quiz.streak > quiz.bestStreak) quiz.bestStreak = quiz.streak;
+    let xp = 10;
+    if (elapsed < 5) xp += 5;
+    if (quiz.streak >= 3) xp += quiz.streak * 2;
+    if (quiz.isDaily) xp *= 2;
+    quiz.xpEarned += xp;
+    if (elapsed < 3) state.fastAnswer = true;
+    if (btnEl) btnEl.classList.add('correct');
+
+    // GOAL animation
+    if (quiz.streak >= 3) showCombo(quiz.streak);
+    else showGoal();
+  } else {
+    quiz.streak = 0;
+    quiz.misses++;
+    if (btnEl) btnEl.classList.add('wrong');
+  }
+
+  updateLiveScore();
+  disableAnswers(q);
+  showExplanation(q, isCorrect);
+}
+
+function normalizeAnswer(s) { return s.toString().trim().replace(/\s+/g,' ').replace(',','.').toLowerCase(); }
+
+function disableAnswers(q) {
+  if (q.type === 'mcq') {
+    document.querySelectorAll('.answer-btn').forEach(btn => {
+      btn.classList.add('disabled');
+      if (normalizeAnswer(btn.textContent) === normalizeAnswer(q.answer)) btn.classList.add('show-correct');
+    });
+  } else {
+    document.getElementById('inputAnswer').disabled = true;
+    document.querySelector('.validate-btn').disabled = true;
+  }
+  document.getElementById('nextBtn').style.display = 'inline-block';
+}
+
+function showExplanation(q, isCorrect) {
+  const box = document.getElementById('explanationBox');
+  box.innerHTML = `${isCorrect ? '⚽ BUUUT !' : '❌ À côté...'}<br><br>💡 ${q.explanation}${q.type==='input' && !isCorrect ? `<br><br>Bonne réponse : <strong>${q.answer}</strong>` : ''}`;
+  box.classList.add('visible');
+}
+
+function nextQuestion() {
+  quiz.current++;
+  if (quiz.current >= quiz.questions.length) endQuiz();
+  else showQuestion();
+}
+
+function endQuiz() {
+  clearInterval(quiz.timerInterval);
+
+  state.totalXp += quiz.xpEarned;
+  state.currentXp += quiz.xpEarned;
+  state.totalSolved += quiz.questions.length;
+  state.totalCorrect += quiz.score;
+  if (quiz.bestStreak > state.bestStreak) state.bestStreak = quiz.bestStreak;
+  if (quiz.score === quiz.questions.length) state.perfectQuizzes++;
+
+  if (quiz.isDaily) { state.dailyCompleted++; state.lastDaily = new Date().toDateString(); }
+
+  if (quiz.topic !== 'daily') {
+    const prev = state.topicsBest[quiz.topic] || 0;
+    if (quiz.score > prev) state.topicsBest[quiz.topic] = quiz.score;
+  }
+
+  const today = new Date().toDateString();
+  if (state.lastPlayDate) {
+    const diff = Math.floor((new Date(today) - new Date(state.lastPlayDate)) / 86400000);
+    if (diff === 1) state.dailyStreak++; else if (diff > 1) state.dailyStreak = 1;
+  } else { state.dailyStreak = 1; }
+  state.lastPlayDate = today;
+
+  checkLevelUp();
+  checkAchievements();
+  saveState();
+  updateUI();
+
+  // Results
+  const avgTime = quiz.times.length ? (quiz.times.reduce((a,b)=>a+b,0)/quiz.times.length).toFixed(1) : 0;
+  const pct = Math.round(quiz.score / quiz.questions.length * 100);
+  let emoji, title, sub;
+  if (pct === 100) { emoji='🏆'; title='VICTOIRE ÉCRASANTE !'; sub='Clean sheet ! Aucun tir raté !'; }
+  else if (pct >= 80) { emoji='⚽'; title='BELLE VICTOIRE !'; sub='Performance de champion !'; }
+  else if (pct >= 60) { emoji='👏'; title='MATCH GAGNÉ !'; sub='Continue l\'entraînement !'; }
+  else if (pct >= 40) { emoji='💪'; title='MATCH NUL'; sub='Tu peux faire mieux !'; }
+  else { emoji='😤'; title='DÉFAITE...'; sub='Retourne à l\'entraînement !'; }
+
+  document.getElementById('resultsEmoji').textContent = emoji;
+  document.getElementById('resultsTitle').textContent = title;
+  document.getElementById('matchScoreFinal').innerHTML = `<span class="w">${quiz.score}</span><span class="s"> - </span><span class="l">${quiz.misses}</span>`;
+  document.getElementById('resultsSub').textContent = sub;
+  document.getElementById('xpGained').textContent = `+${quiz.xpEarned} pts`;
+  document.getElementById('resScore').textContent = quiz.score;
+  document.getElementById('resStreak').textContent = quiz.bestStreak;
+  document.getElementById('resTime').textContent = `${avgTime}s`;
+
+  showScreen('screenResults');
+}
+
+function retryQuiz() {
+  if (quiz.topic === 'daily') startDaily(); else startQuiz(quiz.topic);
+}
+
+// ══════════════════════════════════════
+// XP & LEVELS
+// ══════════════════════════════════════
+
+function xpForLevel(lvl) { return Math.floor(80 * Math.pow(lvl, 1.4)); }
+
+function checkLevelUp() {
+  let needed = xpForLevel(state.level);
+  while (state.currentXp >= needed) {
+    state.currentXp -= needed;
+    state.level++;
+    needed = xpForLevel(state.level);
+    showToast('⬆️', `Division ${state.level} atteinte !`);
+  }
+}
+
+function checkAchievements() {
+  ACHIEVEMENTS.forEach(a => {
+    if (!state.achievements.includes(a.id) && a.check(state)) {
+      state.achievements.push(a.id);
+      showToast(a.icon, `Trophée : ${a.name}`);
+    }
+  });
+}
+
+// ══════════════════════════════════════
+// UI
+// ══════════════════════════════════════
+
+function showScreen(id) {
+  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+  document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
+  if (id === 'screenHome') document.getElementById('navHome').classList.add('active');
+  else if (id === 'screenStats') document.getElementById('navStats').classList.add('active');
+  updateUI();
+}
+
+function updateUI() {
+  document.getElementById('totalXpDisplay').textContent = state.totalXp;
+  document.getElementById('streakDisplay').textContent = state.dailyStreak;
+
+  let title = 'Centre de formation';
+  for (const [xp, t] of TITLES) { if (state.totalXp >= xp) title = t; }
+  document.getElementById('playerTitle').textContent = title;
+
+  const needed = xpForLevel(state.level);
+  document.getElementById('levelDisplay').textContent = state.level;
+  document.getElementById('currentXp').textContent = state.currentXp;
+  document.getElementById('nextXp').textContent = needed;
+  document.getElementById('xpFill').style.width = (state.currentXp / needed * 100) + '%';
+
+  // Topics
+  const grid = document.getElementById('topicsGrid');
+  grid.innerHTML = '';
+  TOPICS.forEach(t => {
+    const best = state.topicsBest[t.id] || 0;
+    const card = document.createElement('div');
+    card.className = 'topic-card';
+    card.onclick = () => startQuiz(t.id);
+    card.innerHTML = `
+      ${best > 0 ? `<div class="best-score">⚽ ${best}/10</div>` : ''}
+      <div class="emoji">${t.emoji}</div>
+      <h3>${t.name}</h3>
+      <p>${t.foot}</p>
+      <span class="difficulty diff-${t.diff}">${t.diff}</span>
+      <div class="topic-progress"><div class="topic-progress-fill" style="width:${best*10}%"></div></div>
+    `;
+    grid.appendChild(card);
+  });
+
+  const today = new Date().toDateString();
+  document.getElementById('dailyStatus').textContent = state.lastDaily === today ? '✅ Joué !' : '';
+
+  renderAchievements('achievementsHome', 6);
+  renderAchievements('achievementsStats', ACHIEVEMENTS.length);
+
+  document.getElementById('statTotalXp').textContent = state.totalXp;
+  document.getElementById('statLevel').textContent = state.level;
+  document.getElementById('statSolved').textContent = state.totalSolved;
+  const rate = state.totalSolved > 0 ? Math.round(state.totalCorrect / state.totalSolved * 100) : 0;
+  document.getElementById('statRate').textContent = rate + '%';
+  document.getElementById('statStreak').textContent = state.bestStreak;
+  document.getElementById('statDays').textContent = state.dailyStreak;
+}
+
+function renderAchievements(containerId, max) {
+  const c = document.getElementById(containerId);
+  c.innerHTML = '';
+  ACHIEVEMENTS.slice(0, max).forEach(a => {
+    const unlocked = state.achievements.includes(a.id);
+    const div = document.createElement('div');
+    div.className = `achievement ${unlocked ? 'unlocked' : 'locked'}`;
+    div.innerHTML = `<div class="ach-icon">${a.icon}</div><div class="ach-name">${a.name}</div><div class="ach-desc">${a.desc}</div>`;
+    c.appendChild(div);
+  });
+}
+
+// ══════════════════════════════════════
+// EFFECTS
+// ══════════════════════════════════════
+
+function showToast(icon, text) {
+  const container = document.getElementById('toastContainer');
+  const toast = document.createElement('div');
+  toast.className = 'toast';
+  toast.innerHTML = `<span class="toast-icon">${icon}</span><span class="toast-text">${text}</span>`;
+  container.appendChild(toast);
+  setTimeout(() => toast.remove(), 3000);
+}
+
+function showGoal() {
+  const el = document.getElementById('goalOverlay');
+  el.className = 'goal-overlay show';
+  setTimeout(() => el.className = 'goal-overlay', 1200);
+}
+
+function showCombo(n) {
+  const el = document.getElementById('comboDisplay');
+  if (n === 3) el.textContent = '🎩 HAT-TRICK !';
+  else if (n === 4) el.textContent = '🔥 POKER !';
+  else if (n === 5) el.textContent = '💫 QUINTUPLÉ !';
+  else if (n >= 10) el.textContent = `👑 MODE MBAPPÉ x${n} !`;
+  else if (n >= 7) el.textContent = `🇫🇷 ALLEZ LES BLEUS x${n} !`;
+  else el.textContent = `⚽ x${n} !`;
+  el.className = 'combo-display show';
+  el.style.color = n >= 7 ? 'var(--gold)' : n >= 5 ? '#ff6b6b' : 'var(--green)';
+  setTimeout(() => el.className = 'combo-display', 1000);
+}
+
+function createParticles() {
+  const container = document.getElementById('particles');
+  const icons = ['⚽','⚽','⚽','🥅','🏆','⭐','👟'];
+  for (let i = 0; i < 15; i++) {
+    const p = document.createElement('div');
+    p.className = 'particle';
+    p.textContent = icons[randInt(0, icons.length-1)];
+    p.style.left = Math.random()*100 + '%';
+    p.style.animationDuration = randInt(18,35) + 's';
+    p.style.animationDelay = randInt(0,15) + 's';
+    container.appendChild(p);
+  }
+}
+
+// ══════════════════════════════════════
+// INIT
+// ══════════════════════════════════════
+loadState();
+createParticles();
+updateUI();
+</script>
+</body>
+</html>
