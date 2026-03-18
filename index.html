@@ -928,7 +928,7 @@ function generateChoices(correct, wrongs) {
 let quiz = {
   topic: null, questions: [], current: 0, score: 0, misses: 0,
   streak: 0, bestStreak: 0, xpEarned: 0, isDaily: false,
-  times: [], questionStart: 0, timerInterval: null, timeLimit: 30
+  times: [], questionStart: 0, timerInterval: null, timeLimit: 60
 };
 
 function startQuiz(topicId) {
@@ -937,7 +937,7 @@ function startQuiz(topicId) {
   quiz = {
     topic: topicId, questions, current: 0, score: 0, misses: 0,
     streak: 0, bestStreak: 0, xpEarned: 0, isDaily: false,
-    times: [], questionStart: 0, timerInterval: null, timeLimit: 30
+    times: [], questionStart: 0, timerInterval: null, timeLimit: 60
   };
   if (!state.topicsPlayedSet.includes(topicId)) {
     state.topicsPlayedSet.push(topicId);
@@ -960,7 +960,7 @@ function startDaily() {
   quiz = {
     topic: 'daily', questions, current: 0, score: 0, misses: 0,
     streak: 0, bestStreak: 0, xpEarned: 0, isDaily: true,
-    times: [], questionStart: 0, timerInterval: null, timeLimit: 30
+    times: [], questionStart: 0, timerInterval: null, timeLimit: 60
   };
   showScreen('screenQuiz');
   document.getElementById('quizTopicLabel').textContent = '🏆 Match du jour';
