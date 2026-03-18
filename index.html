@@ -32,7 +32,7 @@
 
   body {
     font-family: 'Outfit', sans-serif;
-    background: var(--bg) url('ucl-bg.jpg') center center / cover no-repeat fixed;
+    background: #050a1a url('ucl-bg.jpg') center center / cover no-repeat fixed;
     color: var(--text);
     min-height: 100vh;
     overflow-x: hidden;
@@ -42,7 +42,7 @@
   .pitch-bg {
     position: fixed; top: 0; left: 0; width: 100%; height: 100%;
     pointer-events: none; z-index: 0;
-    background: url('https://topfoot.com/wp-content/uploads/2023/02/Ligue-des-Champions.jpg') center center / cover no-repeat;
+    background: url('https://www.footpack.fr/wp-content/uploads/2019/09/habillage-ligue-des-champions-2019-2020-800x800-c-center.jpg') center center / cover no-repeat;
   }
   .pitch-bg::before { display: none; }
   .pitch-bg::after { display: none; }
@@ -102,7 +102,7 @@
   .topbar-right { display: flex; align-items: center; gap: 14px; }
   .stat-badge {
     display: flex; align-items: center; gap: 6px;
-    background: var(--card2); padding: 6px 14px; border-radius: 20px;
+    background: #091442; padding: 6px 14px; border-radius: 20px;
     font-size: 14px; font-weight: 600;
   }
   .stat-badge .icon { font-size: 18px; }
@@ -111,7 +111,7 @@
   .xp-section { margin-bottom: 16px; }
   .xp-header { display: flex; justify-content: space-between; font-size: 13px; margin-bottom: 6px; color: var(--text2); }
   .xp-bar-bg {
-    height: 14px; background: var(--card2); border-radius: 7px; overflow: hidden;
+    height: 14px; background: #091442; border-radius: 7px; overflow: hidden;
     box-shadow: inset 0 2px 4px rgba(0,0,0,0.4);
   }
   .xp-bar-fill {
@@ -154,8 +154,8 @@
     gap: 12px;
   }
   .topic-card {
-    background: var(--card); border-radius: var(--radius); padding: 20px;
-    cursor: pointer; transition: all 0.3s; border: 2px solid transparent;
+    background: #0e1e5b; border-radius: var(--radius); padding: 20px;
+    cursor: pointer; transition: all 0.3s; border: 2px solid #1a2f7a;
     position: relative; overflow: hidden;
   }
   .topic-card:hover {
@@ -173,7 +173,7 @@
   .diff-moyen { background: rgba(0,229,255,0.12); color: var(--blue); }
   .diff-difficile { background: rgba(212,175,55,0.15); color: var(--gold); }
 
-  .topic-progress { margin-top: 10px; height: 4px; background: var(--card2); border-radius: 2px; }
+  .topic-progress { margin-top: 10px; height: 4px; background: #091442; border-radius: 2px; }
   .topic-progress-fill { height: 100%; border-radius: 2px; background: var(--green); transition: width 0.5s; }
 
   .topic-card .best-score {
@@ -201,7 +201,7 @@
   .score-display .away-score { color: var(--red); }
 
   .timer-bar {
-    height: 6px; background: var(--card2); border-radius: 3px;
+    height: 6px; background: #091442; border-radius: 3px;
     margin-bottom: 20px; overflow: hidden;
   }
   .timer-fill {
@@ -212,9 +212,9 @@
   .timer-fill.danger { background: var(--red); }
 
   .question-card {
-    background: var(--card); border-radius: var(--radius); padding: 28px;
+    background: #0e1e5b; border-radius: var(--radius); padding: 28px;
     margin-bottom: 16px; text-align: center;
-    border: 1px solid rgba(212,175,55,0.1);
+    border: 1px solid #1a2f7a;
     position: relative;
   }
   .question-card .q-label {
@@ -226,31 +226,31 @@
 
   .answers-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 16px; }
   .answer-btn {
-    background: var(--card); border: 2px solid var(--card2);
+    background: #0e1e5b; border: 2px solid #1a2f7a;
     border-radius: 14px; padding: 16px; font-size: 18px; font-weight: 600;
     color: var(--text); cursor: pointer; transition: all 0.2s;
     font-family: 'Outfit', 'Cambria Math', sans-serif;
   }
   .answer-btn:hover:not(.disabled) {
-    border-color: var(--blue); background: rgba(0,229,255,0.08);
+    border-color: var(--blue); background: #122a70;
     transform: scale(1.03);
   }
   .answer-btn.correct {
-    border-color: var(--green); background: rgba(0,230,118,0.15);
+    border-color: var(--green); background: #0a3d1f;
     animation: goalPop 0.5s;
   }
   .answer-btn.wrong {
-    border-color: var(--red); background: rgba(255,82,82,0.15);
+    border-color: var(--red); background: #3d0a0a;
     animation: shake 0.4s;
   }
-  .answer-btn.disabled { pointer-events: none; opacity: 0.5; }
-  .answer-btn.show-correct { border-color: var(--green); opacity: 1 !important; }
+  .answer-btn.disabled { pointer-events: none; opacity: 0.6; }
+  .answer-btn.show-correct { border-color: var(--green); opacity: 1 !important; background: #0a3d1f; }
 
   @keyframes goalPop { 0%{transform:scale(1)} 50%{transform:scale(1.1)} 100%{transform:scale(1)} }
   @keyframes shake { 0%,100%{transform:translateX(0)} 25%{transform:translateX(-8px)} 75%{transform:translateX(8px)} }
 
   .explanation-box {
-    background: var(--card2); border-radius: 12px; padding: 16px;
+    background: #091442; border-radius: 12px; padding: 16px;
     margin-top: 12px; font-size: 14px; line-height: 1.6;
     border-left: 4px solid var(--blue); display: none; text-align: left;
   }
@@ -258,7 +258,7 @@
 
   .input-answer-section { text-align: center; margin-bottom: 16px; }
   .input-answer {
-    background: var(--card2); border: 2px solid rgba(0,229,255,0.2);
+    background: #091442; border: 2px solid rgba(0,229,255,0.2);
     border-radius: 12px; padding: 14px 20px; font-size: 22px;
     color: #fff; text-align: center; width: 200px; font-family: 'Outfit', sans-serif;
     font-weight: 600; outline: none; transition: border-color 0.3s;
@@ -294,7 +294,7 @@
 
   /* ─── RESULTS (POST-MATCH) ─── */
   .results-card {
-    background: var(--card); border-radius: var(--radius); padding: 30px;
+    background: #0e1e5b; border-radius: var(--radius); padding: 30px;
     text-align: center; border: 1px solid rgba(212,175,55,0.1);
   }
   .results-emoji { font-size: 64px; margin-bottom: 12px; }
@@ -328,12 +328,12 @@
   }
   .btn:hover { transform: translateY(-2px); }
   .btn-primary { background: linear-gradient(135deg, var(--accent2), var(--blue)); color: #fff; }
-  .btn-secondary { background: var(--card2); color: var(--text); }
+  .btn-secondary { background: #091442; color: var(--text); }
 
   /* ─── TROPHIES ─── */
   .achievements-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)); gap: 10px; }
   .achievement {
-    background: var(--card); border-radius: 14px; padding: 16px; text-align: center;
+    background: #0e1e5b; border-radius: 14px; padding: 16px; text-align: center;
     border: 2px solid transparent; transition: all 0.3s;
   }
   .achievement.unlocked { border-color: var(--gold); box-shadow: 0 0 20px rgba(255,215,0,0.12); }
@@ -356,7 +356,7 @@
   /* ─── TOAST ─── */
   .toast-container { position: fixed; top: 20px; right: 20px; z-index: 1000; }
   .toast {
-    background: var(--card); border-radius: 12px; padding: 14px 20px;
+    background: #0e1e5b; border-radius: 12px; padding: 14px 20px;
     margin-bottom: 8px; display: flex; align-items: center; gap: 10px;
     box-shadow: 0 8px 30px rgba(0,0,0,0.4); animation: slideIn 0.4s, fadeOut 0.4s 2.6s forwards;
     border-left: 4px solid var(--gold);
@@ -382,7 +382,7 @@
   /* ─── NAV ─── */
   .bottom-nav {
     position: fixed; bottom: 0; left: 0; right: 0;
-    background: var(--card); border-top: 1px solid rgba(212,175,55,0.12);
+    background: #0e1e5b; border-top: 1px solid rgba(212,175,55,0.12);
     display: flex; justify-content: center; gap: 0; padding: 8px 0; z-index: 100;
   }
   .nav-btn {
@@ -398,7 +398,7 @@
 
   /* ─── STATS ─── */
   .stat-card {
-    background: var(--card); border-radius: var(--radius); padding: 20px; margin-bottom: 12px;
+    background: #0e1e5b; border-radius: var(--radius); padding: 20px; margin-bottom: 12px;
   }
   .stat-card h3 { font-size: 14px; color: var(--text2); margin-bottom: 8px; }
   .stat-card .big-val { font-size: 36px; font-weight: 800; }
@@ -416,7 +416,7 @@
   .lesson-step-text { font-size: 14px; color: var(--text2); }
 
   .lesson-progress-bar {
-    height: 6px; background: var(--card2); border-radius: 3px;
+    height: 6px; background: #091442; border-radius: 3px;
     margin-bottom: 20px; overflow: hidden;
   }
   .lesson-progress-fill {
@@ -425,7 +425,7 @@
   }
 
   .lesson-card {
-    background: var(--card); border-radius: var(--radius); padding: 28px;
+    background: #0e1e5b; border-radius: var(--radius); padding: 28px;
     margin-bottom: 16px; border: 1px solid rgba(41,182,246,0.1);
     animation: fadeIn 0.4s;
   }
@@ -438,7 +438,7 @@
   .lesson-card .lesson-content p { margin-bottom: 12px; }
 
   .lesson-formula {
-    background: var(--card2); border-radius: 12px; padding: 16px 20px;
+    background: #091442; border-radius: 12px; padding: 16px 20px;
     margin: 14px 0; text-align: center; font-size: 20px; font-weight: 700;
     border-left: 4px solid var(--blue);
     font-family: 'Cambria Math', 'Times New Roman', serif;
@@ -476,7 +476,7 @@
   .lesson-exercise .mini-answers { display: flex; gap: 8px; justify-content: center; flex-wrap: wrap; }
   .lesson-exercise .mini-btn {
     padding: 10px 20px; border-radius: 10px; border: 2px solid var(--card2);
-    background: var(--card); color: var(--text); font-size: 16px; font-weight: 600;
+    background: #0e1e5b; color: var(--text); font-size: 16px; font-weight: 600;
     cursor: pointer; transition: all 0.2s; font-family: 'Outfit', sans-serif;
   }
   .lesson-exercise .mini-btn:hover:not(.disabled) {
@@ -496,7 +496,7 @@
 
   .lesson-input-row { display: flex; gap: 8px; justify-content: center; align-items: center; }
   .lesson-input {
-    background: var(--card2); border: 2px solid rgba(41,182,246,0.2);
+    background: #091442; border: 2px solid rgba(41,182,246,0.2);
     border-radius: 10px; padding: 10px 16px; font-size: 18px;
     color: #fff; text-align: center; width: 120px; font-family: 'Outfit', sans-serif;
     font-weight: 600; outline: none;
