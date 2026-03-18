@@ -390,6 +390,132 @@
   .stat-card .big-val { font-size: 36px; font-weight: 800; }
   .stat-row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
 
+  /* ─── LESSON SCREEN ─── */
+  .lesson-header {
+    display: flex; justify-content: space-between; align-items: center;
+    margin-bottom: 16px; flex-wrap: wrap; gap: 10px;
+  }
+  .lesson-topic-label {
+    font-size: 14px; font-weight: 600; color: var(--blue);
+    background: rgba(41,182,246,0.1); padding: 4px 14px; border-radius: 12px;
+  }
+  .lesson-step-text { font-size: 14px; color: var(--text2); }
+
+  .lesson-progress-bar {
+    height: 6px; background: var(--card2); border-radius: 3px;
+    margin-bottom: 20px; overflow: hidden;
+  }
+  .lesson-progress-fill {
+    height: 100%; border-radius: 3px; background: var(--blue);
+    transition: width 0.4s ease;
+  }
+
+  .lesson-card {
+    background: var(--card); border-radius: var(--radius); padding: 28px;
+    margin-bottom: 16px; border: 1px solid rgba(41,182,246,0.1);
+    animation: fadeIn 0.4s;
+  }
+  .lesson-card .lesson-icon { font-size: 40px; text-align: center; margin-bottom: 12px; }
+  .lesson-card h2 {
+    font-size: 20px; font-weight: 800; margin-bottom: 14px;
+    color: var(--blue); text-align: center;
+  }
+  .lesson-card .lesson-content { font-size: 15px; line-height: 1.8; }
+  .lesson-card .lesson-content p { margin-bottom: 12px; }
+
+  .lesson-formula {
+    background: var(--card2); border-radius: 12px; padding: 16px 20px;
+    margin: 14px 0; text-align: center; font-size: 20px; font-weight: 700;
+    border-left: 4px solid var(--blue);
+    font-family: 'Cambria Math', 'Times New Roman', serif;
+  }
+
+  .lesson-example {
+    background: rgba(0,230,118,0.06); border-radius: 12px; padding: 16px;
+    margin: 14px 0; border-left: 4px solid var(--green);
+  }
+  .lesson-example .ex-label {
+    font-size: 12px; font-weight: 700; color: var(--green);
+    text-transform: uppercase; letter-spacing: 1px; margin-bottom: 8px;
+  }
+  .lesson-example .ex-content { font-size: 14px; line-height: 1.7; }
+  .lesson-example .ex-content .step { color: var(--text2); font-size: 13px; }
+
+  .lesson-tip {
+    background: rgba(255,215,0,0.08); border-radius: 12px; padding: 14px 16px;
+    margin: 14px 0; border-left: 4px solid var(--gold);
+    font-size: 14px;
+  }
+  .lesson-tip .tip-label {
+    font-weight: 700; color: var(--gold); margin-bottom: 4px;
+  }
+
+  /* Mini exercice dans le cours */
+  .lesson-exercise {
+    background: rgba(41,182,246,0.06); border-radius: 12px; padding: 18px;
+    margin: 16px 0; border: 2px dashed rgba(41,182,246,0.2);
+    text-align: center;
+  }
+  .lesson-exercise .ex-question {
+    font-size: 18px; font-weight: 700; margin-bottom: 12px;
+  }
+  .lesson-exercise .mini-answers { display: flex; gap: 8px; justify-content: center; flex-wrap: wrap; }
+  .lesson-exercise .mini-btn {
+    padding: 10px 20px; border-radius: 10px; border: 2px solid var(--card2);
+    background: var(--card); color: var(--text); font-size: 16px; font-weight: 600;
+    cursor: pointer; transition: all 0.2s; font-family: 'Outfit', sans-serif;
+  }
+  .lesson-exercise .mini-btn:hover:not(.disabled) {
+    border-color: var(--blue); transform: scale(1.05);
+  }
+  .lesson-exercise .mini-btn.mini-correct {
+    border-color: var(--green); background: rgba(0,230,118,0.15);
+  }
+  .lesson-exercise .mini-btn.mini-wrong {
+    border-color: var(--red); background: rgba(255,82,82,0.15);
+  }
+  .lesson-exercise .mini-btn.disabled { pointer-events: none; }
+  .lesson-exercise .mini-feedback {
+    margin-top: 10px; font-size: 14px; font-weight: 600;
+    min-height: 20px;
+  }
+
+  .lesson-input-row { display: flex; gap: 8px; justify-content: center; align-items: center; }
+  .lesson-input {
+    background: var(--card2); border: 2px solid rgba(41,182,246,0.2);
+    border-radius: 10px; padding: 10px 16px; font-size: 18px;
+    color: #fff; text-align: center; width: 120px; font-family: 'Outfit', sans-serif;
+    font-weight: 600; outline: none;
+  }
+  .lesson-input:focus { border-color: var(--blue); }
+  .lesson-ok-btn {
+    padding: 10px 20px; border-radius: 10px; border: none;
+    background: var(--blue); color: #fff; font-size: 15px;
+    font-weight: 700; cursor: pointer; font-family: 'Outfit', sans-serif;
+  }
+
+  .lesson-nav {
+    display: flex; justify-content: space-between; gap: 10px; margin-top: 8px;
+  }
+  .lesson-nav .btn { flex: 1; text-align: center; }
+
+  /* Topic card dual buttons */
+  .topic-actions {
+    display: flex; gap: 6px; margin-top: 10px;
+  }
+  .topic-action-btn {
+    flex: 1; padding: 7px 0; border-radius: 8px; border: none;
+    font-size: 12px; font-weight: 700; cursor: pointer;
+    font-family: 'Outfit', sans-serif; transition: all 0.2s;
+  }
+  .topic-action-btn:hover { transform: translateY(-1px); }
+  .topic-action-btn.action-lesson {
+    background: rgba(41,182,246,0.15); color: var(--blue);
+  }
+  .topic-action-btn.action-match {
+    background: rgba(0,230,118,0.15); color: var(--green);
+  }
+
   /* ─── RESPONSIVE ─── */
   @media (max-width: 500px) {
     .answers-grid { grid-template-columns: 1fr; }
@@ -487,6 +613,20 @@
     </div>
   </div>
 
+  <!-- ═══ LESSON (COURS) ═══ -->
+  <div class="screen" id="screenLesson">
+    <div class="lesson-header">
+      <span class="lesson-topic-label" id="lessonTopicLabel"></span>
+      <span class="lesson-step-text" id="lessonStepText"></span>
+    </div>
+    <div class="lesson-progress-bar"><div class="lesson-progress-fill" id="lessonProgressFill"></div></div>
+    <div id="lessonContent"></div>
+    <div class="lesson-nav">
+      <button class="btn btn-secondary" id="lessonPrevBtn" onclick="lessonPrev()">← Précédent</button>
+      <button class="btn btn-primary" id="lessonNextBtn" onclick="lessonNext()">Suivant →</button>
+    </div>
+  </div>
+
   <!-- ═══ RESULTS (POST-MATCH) ═══ -->
   <div class="screen" id="screenResults">
     <div class="results-card">
@@ -526,6 +666,17 @@
     <div class="achievements-grid" id="achievementsStats"></div>
     <div class="spacer-bottom"></div>
   </div>
+
+  <!-- ═══ COURS MENU ═══ -->
+  <div class="screen" id="screenCours">
+    <div class="welcome-banner">
+      <h1>📖 Centre de <span class="foot">Formation</span></h1>
+      <p>Apprends les notions avant de jouer le match !</p>
+    </div>
+    <div class="section-title">📚 Choisis un cours</div>
+    <div class="topics-grid" id="coursGrid"></div>
+    <div class="spacer-bottom"></div>
+  </div>
 </div>
 
 <!-- BOTTOM NAV -->
@@ -535,6 +686,9 @@
   </button>
   <button class="nav-btn" onclick="showScreen('screenStats')" id="navStats">
     <span class="nav-icon">📊</span><span class="nav-label">Carrière</span>
+  </button>
+  <button class="nav-btn" onclick="showScreen('screenCours')" id="navCours">
+    <span class="nav-icon">📖</span><span class="nav-label">Cours</span>
   </button>
 </div>
 
@@ -1189,6 +1343,7 @@ function showScreen(id) {
   document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
   if (id === 'screenHome') document.getElementById('navHome').classList.add('active');
   else if (id === 'screenStats') document.getElementById('navStats').classList.add('active');
+  else if (id === 'screenCours') document.getElementById('navCours').classList.add('active');
   updateUI();
 }
 
@@ -1211,9 +1366,9 @@ function updateUI() {
   grid.innerHTML = '';
   TOPICS.forEach(t => {
     const best = state.topicsBest[t.id] || 0;
+    const hasLesson = !!LESSONS[t.id];
     const card = document.createElement('div');
     card.className = 'topic-card';
-    card.onclick = () => startQuiz(t.id);
     card.innerHTML = `
       ${best > 0 ? `<div class="best-score">⚽ ${best}/10</div>` : ''}
       <div class="emoji">${t.emoji}</div>
@@ -1221,9 +1376,33 @@ function updateUI() {
       <p>${t.foot}</p>
       <span class="difficulty diff-${t.diff}">${t.diff}</span>
       <div class="topic-progress"><div class="topic-progress-fill" style="width:${best*10}%"></div></div>
+      <div class="topic-actions">
+        ${hasLesson ? `<button class="topic-action-btn action-lesson" onclick="event.stopPropagation();startLesson('${t.id}')">📖 Cours</button>` : ''}
+        <button class="topic-action-btn action-match" onclick="event.stopPropagation();startQuiz('${t.id}')">⚽ Match</button>
+      </div>
     `;
+    card.onclick = () => startQuiz(t.id);
     grid.appendChild(card);
   });
+
+  // Cours grid
+  const coursGrid = document.getElementById('coursGrid');
+  if (coursGrid) {
+    coursGrid.innerHTML = '';
+    TOPICS.forEach(t => {
+      if (!LESSONS[t.id]) return;
+      const card = document.createElement('div');
+      card.className = 'topic-card';
+      card.onclick = () => startLesson(t.id);
+      card.innerHTML = `
+        <div class="emoji">${t.emoji}</div>
+        <h3>${t.name}</h3>
+        <p>📖 ${LESSONS[t.id].length} étapes</p>
+        <span class="difficulty diff-${t.diff}">${t.diff}</span>
+      `;
+      coursGrid.appendChild(card);
+    });
+  }
 
   const today = new Date().toDateString();
   document.getElementById('dailyStatus').textContent = state.lastDaily === today ? '✅ Joué !' : '';
@@ -1295,6 +1474,749 @@ function createParticles() {
     p.style.animationDuration = randInt(18,35) + 's';
     p.style.animationDelay = randInt(0,15) + 's';
     container.appendChild(p);
+  }
+}
+
+// ══════════════════════════════════════
+// LESSONS DATA
+// ══════════════════════════════════════
+
+const LESSONS = {
+
+calcul_litteral: [
+  {
+    title: 'Développer : la base',
+    icon: '📝',
+    content: `
+      <p><strong>Développer</strong>, c'est supprimer les parenthèses en multipliant chaque terme.</p>
+      <p>Imagine que l'entraîneur de l'OL distribue <strong>k</strong> maillots à chaque joueur. S'il y a <strong>(a + b)</strong> joueurs, le total c'est :</p>
+      <div class="lesson-formula">k × (a + b) = k×a + k×b</div>
+      <div class="lesson-example">
+        <div class="ex-label">⚽ Exemple football</div>
+        <div class="ex-content">
+          3(2x + 5)<br>
+          <span class="step">= 3 × 2x + 3 × 5</span><br>
+          <span class="step">= <strong>6x + 15</strong></span>
+        </div>
+      </div>
+      <div class="lesson-tip">
+        <div class="tip-label">💡 Astuce</div>
+        On multiplie le nombre devant la parenthèse par <strong>chaque terme</strong> à l'intérieur.
+      </div>
+    `,
+    exercise: { question: 'Développe : 4(3x + 2)', choices: ['12x + 8', '12x + 2', '7x + 8', '4x + 8'], correct: 0 }
+  },
+  {
+    title: 'Développer avec un moins',
+    icon: '➖',
+    content: `
+      <p>Quand il y a un <strong>signe moins</strong> devant ou dans la parenthèse, attention aux signes !</p>
+      <div class="lesson-formula">k × (a − b) = k×a − k×b</div>
+      <div class="lesson-example">
+        <div class="ex-label">⚽ Exemple</div>
+        <div class="ex-content">
+          5(3x − 4)<br>
+          <span class="step">= 5 × 3x − 5 × 4</span><br>
+          <span class="step">= <strong>15x − 20</strong></span>
+        </div>
+      </div>
+      <div class="lesson-tip">
+        <div class="tip-label">⚠️ Piège classique</div>
+        N'oublie pas de multiplier le <strong>signe</strong> aussi ! Un − devant la parenthèse change les signes de tout ce qu'il y a dedans.
+      </div>
+    `,
+    exercise: { question: 'Développe : 2(5x − 3)', choices: ['10x − 6', '10x − 3', '7x − 6', '10x + 6'], correct: 0 }
+  },
+  {
+    title: 'Réduire une expression',
+    icon: '🔄',
+    content: `
+      <p><strong>Réduire</strong>, c'est regrouper les termes qui se ressemblent (les "x ensemble", les nombres ensemble).</p>
+      <p>Comme quand le coach de l'Équipe de France regroupe les attaquants d'un côté et les défenseurs de l'autre !</p>
+      <div class="lesson-formula">On regroupe les termes en x + les termes sans x</div>
+      <div class="lesson-example">
+        <div class="ex-label">⚽ Exemple</div>
+        <div class="ex-content">
+          3x + 7 + 5x + 2<br>
+          <span class="step">= (3x + 5x) + (7 + 2)</span><br>
+          <span class="step">= <strong>8x + 9</strong></span>
+        </div>
+      </div>
+    `,
+    exercise: { question: 'Réduis : 4x + 3 + 2x + 6', choices: ['6x + 9', '6x + 6', '4x + 11', '12x + 6'], correct: 0 }
+  },
+  {
+    title: 'Double distribution',
+    icon: '✖️',
+    content: `
+      <p>Pour développer <strong>(a + b)(c + d)</strong>, on utilise la <strong>double distribution</strong> : chaque terme du premier facteur multiplie chaque terme du second.</p>
+      <div class="lesson-formula">(a + b)(c + d) = ac + ad + bc + bd</div>
+      <div class="lesson-example">
+        <div class="ex-label">⚽ Exemple</div>
+        <div class="ex-content">
+          (2x + 3)(x + 4)<br>
+          <span class="step">= 2x×x + 2x×4 + 3×x + 3×4</span><br>
+          <span class="step">= 2x² + 8x + 3x + 12</span><br>
+          <span class="step">= <strong>2x² + 11x + 12</strong></span>
+        </div>
+      </div>
+      <div class="lesson-tip">
+        <div class="tip-label">💡 Moyen mnémotechnique</div>
+        Pense à 4 passes : chaque joueur de l'attaque (1er crochet) fait une passe à chaque joueur de la défense (2e crochet).
+      </div>
+    `,
+    exercise: { question: 'Développe (x + 2)(x + 5) :', choices: ['x² + 7x + 10', 'x² + 7x + 7', 'x² + 10x + 7', '2x² + 7x + 10'], correct: 0 }
+  },
+  {
+    title: 'Factoriser',
+    icon: '📦',
+    content: `
+      <p><strong>Factoriser</strong>, c'est l'inverse de développer : on cherche un <strong>facteur commun</strong> et on le met devant la parenthèse.</p>
+      <p>Comme quand tous les joueurs de l'OL portent le même maillot : le maillot est le facteur commun !</p>
+      <div class="lesson-formula">ka + kb = k(a + b)</div>
+      <div class="lesson-example">
+        <div class="ex-label">⚽ Exemple</div>
+        <div class="ex-content">
+          6x + 18<br>
+          <span class="step">Le facteur commun est 6</span><br>
+          <span class="step">= 6 × x + 6 × 3</span><br>
+          <span class="step">= <strong>6(x + 3)</strong></span>
+        </div>
+      </div>
+    `,
+    exercise: { question: 'Factorise : 8x + 24', choices: ['8(x + 3)', '8(x + 24)', '4(2x + 6)', '8x(1 + 3)'], correct: 0 }
+  }
+],
+
+fractions: [
+  {
+    title: 'Additionner des fractions (même dénominateur)',
+    icon: '🍕',
+    content: `
+      <p>Quand deux fractions ont le <strong>même dénominateur</strong>, on additionne juste les numérateurs !</p>
+      <p>Imagine une pizza coupée en 8 parts au stade : si Mbappé prend 3/8 et Griezmann prend 2/8...</p>
+      <div class="lesson-formula">a/n + b/n = (a+b)/n</div>
+      <div class="lesson-example">
+        <div class="ex-label">⚽ Exemple</div>
+        <div class="ex-content">
+          3/8 + 2/8 = 5/8<br>
+          <span class="step">Même dénominateur → on additionne les numérateurs</span>
+        </div>
+      </div>
+      <div class="lesson-tip">
+        <div class="tip-label">⚠️ Attention</div>
+        On n'additionne JAMAIS les dénominateurs ! 3/8 + 2/8 ≠ 5/16
+      </div>
+    `,
+    exercise: { question: '2/7 + 3/7 = ?', choices: ['5/7', '5/14', '6/7', '2/3'], correct: 0 }
+  },
+  {
+    title: 'Additionner (dénominateurs différents)',
+    icon: '🔢',
+    content: `
+      <p>Si les dénominateurs sont <strong>différents</strong>, il faut d'abord les <strong>mettre au même dénominateur</strong>.</p>
+      <div class="lesson-formula">a/n + b/m → trouver un dénominateur commun</div>
+      <div class="lesson-example">
+        <div class="ex-label">⚽ Exemple</div>
+        <div class="ex-content">
+          1/3 + 1/6<br>
+          <span class="step">Le dénominateur commun de 3 et 6 est 6</span><br>
+          <span class="step">1/3 = 2/6</span><br>
+          <span class="step">2/6 + 1/6 = <strong>3/6 = 1/2</strong></span>
+        </div>
+      </div>
+      <div class="lesson-tip">
+        <div class="tip-label">💡 Astuce</div>
+        Cherche le plus petit multiple commun des deux dénominateurs.
+      </div>
+    `,
+    exercise: { question: '1/4 + 1/2 = ?', choices: ['3/4', '2/6', '1/6', '2/4'], correct: 0 }
+  },
+  {
+    title: 'Multiplier des fractions',
+    icon: '✖️',
+    content: `
+      <p>Pour <strong>multiplier</strong> deux fractions, c'est simple : on multiplie les numérateurs entre eux et les dénominateurs entre eux !</p>
+      <div class="lesson-formula">a/b × c/d = (a×c) / (b×d)</div>
+      <div class="lesson-example">
+        <div class="ex-label">⚽ Exemple</div>
+        <div class="ex-content">
+          2/3 × 4/5<br>
+          <span class="step">= (2×4) / (3×5)</span><br>
+          <span class="step">= <strong>8/15</strong></span>
+        </div>
+      </div>
+      <div class="lesson-tip">
+        <div class="tip-label">💡 Simplifier avant</div>
+        Tu peux simplifier en croix AVANT de multiplier pour avoir des nombres plus petits.
+      </div>
+    `,
+    exercise: { question: '3/4 × 2/5 = ?', choices: ['6/20', '5/9', '3/10', '6/9'], correct: 0 }
+  },
+  {
+    title: 'Simplifier une fraction',
+    icon: '✂️',
+    content: `
+      <p><strong>Simplifier</strong>, c'est diviser le numérateur et le dénominateur par le même nombre (leur PGCD).</p>
+      <div class="lesson-formula">Pour simplifier a/b, on cherche le plus grand diviseur commun</div>
+      <div class="lesson-example">
+        <div class="ex-label">⚽ Exemple</div>
+        <div class="ex-content">
+          6/20<br>
+          <span class="step">6 et 20 sont tous les deux divisibles par 2</span><br>
+          <span class="step">= <strong>3/10</strong></span>
+        </div>
+      </div>
+    `,
+    exercise: { question: 'Simplifie 12/18 :', choices: ['2/3', '6/9', '4/6', '3/4'], correct: 0 }
+  }
+],
+
+puissances: [
+  {
+    title: 'Qu\'est-ce qu\'une puissance ?',
+    icon: '⚡',
+    content: `
+      <p>Une <strong>puissance</strong>, c'est une multiplication répétée. Comme quand Mbappé sprinte et double sa vitesse encore et encore !</p>
+      <div class="lesson-formula">aⁿ = a × a × a × ... (n fois)</div>
+      <div class="lesson-example">
+        <div class="ex-label">⚽ Exemple</div>
+        <div class="ex-content">
+          3⁴ = 3 × 3 × 3 × 3 = <strong>81</strong><br>
+          <span class="step">On multiplie 3 par lui-même 4 fois</span>
+        </div>
+      </div>
+      <div class="lesson-tip">
+        <div class="tip-label">📌 Cas particuliers</div>
+        a¹ = a (toujours)<br>
+        a⁰ = 1 (toujours, sauf 0⁰)
+      </div>
+    `,
+    exercise: { question: 'Calcule 2⁵ :', choices: ['32', '10', '25', '64'], correct: 0 }
+  },
+  {
+    title: 'Multiplier des puissances',
+    icon: '✖️',
+    content: `
+      <p>Quand on <strong>multiplie</strong> deux puissances de la <strong>même base</strong>, on <strong>additionne</strong> les exposants.</p>
+      <div class="lesson-formula">aⁿ × aᵐ = aⁿ⁺ᵐ</div>
+      <div class="lesson-example">
+        <div class="ex-label">⚽ Exemple</div>
+        <div class="ex-content">
+          5³ × 5² = 5³⁺² = 5⁵ = <strong>3125</strong><br>
+          <span class="step">Même base (5) → on additionne les exposants</span>
+        </div>
+      </div>
+      <div class="lesson-tip">
+        <div class="tip-label">⚠️ Piège</div>
+        Ça ne marche que si la <strong>base est la même</strong> ! 2³ × 3² ≠ 6⁵
+      </div>
+    `,
+    exercise: { question: 'Simplifie 7² × 7³ :', choices: ['7⁵', '7⁶', '49⁵', '7⁹'], correct: 0 }
+  },
+  {
+    title: 'Puissance de puissance',
+    icon: '🔁',
+    content: `
+      <p>Quand on élève une puissance à une puissance, on <strong>multiplie</strong> les exposants.</p>
+      <div class="lesson-formula">(aⁿ)ᵐ = aⁿˣᵐ</div>
+      <div class="lesson-example">
+        <div class="ex-label">⚽ Exemple</div>
+        <div class="ex-content">
+          (3²)⁴ = 3²ˣ⁴ = 3⁸ = <strong>6561</strong><br>
+          <span class="step">On multiplie les exposants : 2 × 4 = 8</span>
+        </div>
+      </div>
+    `,
+    exercise: { question: 'Simplifie (2³)² :', choices: ['2⁶', '2⁵', '2⁹', '4⁶'], correct: 0 }
+  },
+  {
+    title: 'Notation scientifique',
+    icon: '🔬',
+    content: `
+      <p>La <strong>notation scientifique</strong> permet d'écrire les très grands (ou très petits) nombres de façon compacte.</p>
+      <p>Par exemple, le nombre de spectateurs au Bernabéu (81 000) ou la taille d'un ballon en mètres (0,22m).</p>
+      <div class="lesson-formula">a × 10ⁿ avec 1 ≤ a < 10</div>
+      <div class="lesson-example">
+        <div class="ex-label">⚽ Exemple</div>
+        <div class="ex-content">
+          81 000 = 8,1 × 10⁴<br>
+          <span class="step">On déplace la virgule de 4 rangs vers la gauche</span><br><br>
+          3 500 000 = 3,5 × 10⁶<br>
+          <span class="step">Virgule déplacée de 6 rangs</span>
+        </div>
+      </div>
+    `,
+    exercise: { question: '250 000 en notation scientifique :', choices: ['2,5 × 10⁵', '25 × 10⁴', '2,5 × 10⁶', '0,25 × 10⁶'], correct: 0 }
+  }
+],
+
+pythagore: [
+  {
+    title: 'Le théorème de Pythagore',
+    icon: '📐',
+    content: `
+      <p>Dans un <strong>triangle rectangle</strong>, le carré de l'hypoténuse (le plus grand côté) est égal à la somme des carrés des deux autres côtés.</p>
+      <p>Imagine le terrain du Groupama Stadium vu en diagonale !</p>
+      <div class="lesson-formula">c² = a² + b²</div>
+      <p>où <strong>c</strong> est l'hypoténuse (le côté le plus long, face à l'angle droit).</p>
+      <div class="lesson-example">
+        <div class="ex-label">⚽ Exemple</div>
+        <div class="ex-content">
+          Triangle avec a = 3m, b = 4m<br>
+          <span class="step">c² = 3² + 4² = 9 + 16 = 25</span><br>
+          <span class="step">c = √25 = <strong>5m</strong></span>
+        </div>
+      </div>
+      <div class="lesson-tip">
+        <div class="tip-label">📌 Rappel</div>
+        L'hypoténuse est TOUJOURS le côté le plus long. Elle est face à l'angle droit (90°).
+      </div>
+    `,
+    exercise: { question: 'Triangle rectangle : a=6, b=8. Hypoténuse c = ?', choices: ['10', '14', '48', '100'], correct: 0 }
+  },
+  {
+    title: 'Trouver un côté (pas l\'hypoténuse)',
+    icon: '🔍',
+    content: `
+      <p>Si on connaît l'hypoténuse et un côté, on peut trouver l'autre côté :</p>
+      <div class="lesson-formula">a² = c² − b²</div>
+      <div class="lesson-example">
+        <div class="ex-label">⚽ Exemple</div>
+        <div class="ex-content">
+          La passe de Cherki parcourt c = 13m en diagonale, b = 12m en longueur.<br>
+          <span class="step">a² = 13² − 12² = 169 − 144 = 25</span><br>
+          <span class="step">a = √25 = <strong>5m</strong></span>
+        </div>
+      </div>
+      <div class="lesson-tip">
+        <div class="tip-label">⚠️ Attention</div>
+        On <strong>soustrait</strong> cette fois (c² − b²), on n'additionne pas !
+      </div>
+    `,
+    exercise: { question: 'Hypoténuse = 17, un côté = 15. Autre côté = ?', choices: ['8', '2', '32', '12'], correct: 0 }
+  },
+  {
+    title: 'Vérifier si un triangle est rectangle',
+    icon: '✅',
+    content: `
+      <p>Pour savoir si un triangle est rectangle, on vérifie si <strong>le carré du plus grand côté = somme des carrés des deux autres</strong>.</p>
+      <div class="lesson-formula">Si c² = a² + b² → le triangle est rectangle</div>
+      <div class="lesson-example">
+        <div class="ex-label">⚽ Exemple</div>
+        <div class="ex-content">
+          Côtés : 5, 12, 13<br>
+          <span class="step">13² = 169</span><br>
+          <span class="step">5² + 12² = 25 + 144 = 169</span><br>
+          <span class="step">169 = 169 → <strong>OUI, rectangle !</strong></span>
+        </div>
+      </div>
+    `,
+    exercise: { question: 'Triangle de côtés 7, 24, 25. Est-il rectangle ?', choices: ['Oui', 'Non'], correct: 0 }
+  }
+],
+
+proportionnalite: [
+  {
+    title: 'Qu\'est-ce que la proportionnalité ?',
+    icon: '⚖️',
+    content: `
+      <p>Deux grandeurs sont <strong>proportionnelles</strong> quand on passe de l'une à l'autre en <strong>multipliant toujours par le même nombre</strong> (le coefficient).</p>
+      <div class="lesson-example">
+        <div class="ex-label">⚽ Exemple</div>
+        <div class="ex-content">
+          2 places au Groupama Stadium → 30€<br>
+          4 places → 60€<br>
+          6 places → 90€<br>
+          <span class="step">Coefficient : 15€ par place (×15 à chaque fois)</span>
+        </div>
+      </div>
+    `,
+    exercise: { question: '3 maillots OL coûtent 240€. Prix d\'un maillot ?', choices: ['80€', '60€', '120€', '237€'], correct: 0 }
+  },
+  {
+    title: 'Calculer un pourcentage',
+    icon: '💯',
+    content: `
+      <p>Un <strong>pourcentage</strong> c'est une fraction sur 100. Pour calculer x% d'un nombre, on multiplie par x/100.</p>
+      <div class="lesson-formula">x% de N = N × x / 100</div>
+      <div class="lesson-example">
+        <div class="ex-label">⚽ Exemple</div>
+        <div class="ex-content">
+          Un maillot du Real Madrid à 120€ est soldé de 25%.<br>
+          <span class="step">Réduction = 120 × 25/100 = 120 × 0,25 = <strong>30€</strong></span><br>
+          <span class="step">Prix soldé = 120 − 30 = <strong>90€</strong></span>
+        </div>
+      </div>
+      <div class="lesson-tip">
+        <div class="tip-label">💡 Raccourci</div>
+        10% → diviser par 10<br>
+        50% → diviser par 2<br>
+        25% → diviser par 4
+      </div>
+    `,
+    exercise: { question: '20% de 150€ = ?', choices: ['30€', '20€', '15€', '130€'], correct: 0 }
+  },
+  {
+    title: 'Le produit en croix',
+    icon: '✖️',
+    content: `
+      <p>Le <strong>produit en croix</strong> permet de trouver une valeur manquante dans un tableau de proportionnalité.</p>
+      <div class="lesson-formula">a/b = c/d → d = b × c / a</div>
+      <div class="lesson-example">
+        <div class="ex-label">⚽ Exemple</div>
+        <div class="ex-content">
+          Mbappé marque 8 buts en 10 matchs. Combien en 25 matchs ?<br>
+          <span class="step">8/10 = ?/25</span><br>
+          <span class="step">? = 8 × 25 / 10 = 200/10 = <strong>20 buts</strong></span>
+        </div>
+      </div>
+    `,
+    exercise: { question: '5 croissants coûtent 6€. Prix de 15 croissants ?', choices: ['18€', '26€', '11€', '30€'], correct: 0 }
+  }
+],
+
+statistiques: [
+  {
+    title: 'La moyenne',
+    icon: '📊',
+    content: `
+      <p>La <strong>moyenne</strong>, c'est la somme de toutes les valeurs divisée par le nombre de valeurs.</p>
+      <div class="lesson-formula">Moyenne = Somme des valeurs / Nombre de valeurs</div>
+      <div class="lesson-example">
+        <div class="ex-label">⚽ Exemple</div>
+        <div class="ex-content">
+          Buts de Lacazette sur 5 matchs : 2, 0, 3, 1, 4<br>
+          <span class="step">Somme = 2+0+3+1+4 = 10</span><br>
+          <span class="step">Moyenne = 10/5 = <strong>2 buts par match</strong></span>
+        </div>
+      </div>
+    `,
+    exercise: { question: 'Moyenne de 4, 6, 8, 2 ?', choices: ['5', '6', '4', '20'], correct: 0 }
+  },
+  {
+    title: 'La médiane',
+    icon: '📏',
+    content: `
+      <p>La <strong>médiane</strong> est la valeur qui sépare la série en deux moitiés égales, une fois les valeurs <strong>triées</strong>.</p>
+      <div class="lesson-formula">1. Trier les valeurs<br>2. Prendre celle du milieu</div>
+      <div class="lesson-example">
+        <div class="ex-label">⚽ Exemple</div>
+        <div class="ex-content">
+          Passes réussies par match : 45, 32, 58, 41, 50<br>
+          <span class="step">Trié : 32, 41, <strong>45</strong>, 50, 58</span><br>
+          <span class="step">Médiane = <strong>45</strong> (la valeur du milieu)</span>
+        </div>
+      </div>
+      <div class="lesson-tip">
+        <div class="tip-label">💡 Nombre pair de valeurs ?</div>
+        Si le nombre de valeurs est pair, la médiane est la <strong>moyenne des deux valeurs du milieu</strong>.
+      </div>
+    `,
+    exercise: { question: 'Médiane de 3, 7, 1, 9, 5 ?', choices: ['5', '7', '3', '25'], correct: 0 }
+  },
+  {
+    title: 'L\'étendue',
+    icon: '↔️',
+    content: `
+      <p>L'<strong>étendue</strong> mesure l'écart entre la plus grande et la plus petite valeur.</p>
+      <div class="lesson-formula">Étendue = Valeur max − Valeur min</div>
+      <div class="lesson-example">
+        <div class="ex-label">⚽ Exemple</div>
+        <div class="ex-content">
+          Spectateurs au Parc OL sur 4 matchs : 42 000, 55 000, 38 000, 51 000<br>
+          <span class="step">Max = 55 000, Min = 38 000</span><br>
+          <span class="step">Étendue = 55 000 − 38 000 = <strong>17 000</strong></span>
+        </div>
+      </div>
+    `,
+    exercise: { question: 'Étendue de : 12, 5, 8, 19, 3 ?', choices: ['16', '19', '3', '9'], correct: 0 }
+  }
+],
+
+equations: [
+  {
+    title: 'Qu\'est-ce qu\'une équation ?',
+    icon: '🔍',
+    content: `
+      <p>Une <strong>équation</strong>, c'est une égalité avec une inconnue (souvent <strong>x</strong>) qu'il faut trouver.</p>
+      <p>C'est comme un mystère tactique : l'entraîneur du Real sait le résultat du match, mais cherche combien de buts il faut marquer en 2e mi-temps !</p>
+      <div class="lesson-formula">Résoudre = trouver la valeur de x qui rend l'égalité vraie</div>
+      <div class="lesson-example">
+        <div class="ex-label">⚽ Exemple</div>
+        <div class="ex-content">
+          x + 3 = 7<br>
+          <span class="step">Quel nombre + 3 donne 7 ?</span><br>
+          <span class="step">x = 7 − 3 = <strong>4</strong></span>
+        </div>
+      </div>
+    `,
+    exercise: { question: 'Résous : x + 5 = 12', answer: '7' }
+  },
+  {
+    title: 'Équation du type ax + b = c',
+    icon: '📝',
+    content: `
+      <p>Pour résoudre <strong>ax + b = c</strong>, on isole x en deux étapes :</p>
+      <div class="lesson-formula">1. On enlève b des deux côtés : ax = c − b<br>2. On divise par a : x = (c − b) / a</div>
+      <div class="lesson-example">
+        <div class="ex-label">⚽ Exemple</div>
+        <div class="ex-content">
+          3x + 7 = 22<br>
+          <span class="step">3x = 22 − 7 = 15</span><br>
+          <span class="step">x = 15 / 3 = <strong>5</strong></span>
+        </div>
+      </div>
+      <div class="lesson-tip">
+        <div class="tip-label">📌 Règle d'or</div>
+        Ce qu'on fait d'un côté du "=", on le fait de l'autre côté aussi !
+      </div>
+    `,
+    exercise: { question: 'Résous : 4x + 2 = 18', answer: '4' }
+  },
+  {
+    title: 'Équation avec x des deux côtés',
+    icon: '⚖️',
+    content: `
+      <p>Quand x apparaît <strong>des deux côtés</strong>, on regroupe tous les x d'un côté et tous les nombres de l'autre.</p>
+      <div class="lesson-formula">ax + b = cx + d → (a−c)x = d − b</div>
+      <div class="lesson-example">
+        <div class="ex-label">⚽ Exemple</div>
+        <div class="ex-content">
+          5x + 3 = 2x + 12<br>
+          <span class="step">5x − 2x = 12 − 3</span><br>
+          <span class="step">3x = 9</span><br>
+          <span class="step">x = <strong>3</strong></span>
+        </div>
+      </div>
+    `,
+    exercise: { question: 'Résous : 7x + 1 = 3x + 13', answer: '3' }
+  },
+  {
+    title: 'Équation avec parenthèses',
+    icon: '🔓',
+    content: `
+      <p>S'il y a des parenthèses, on <strong>développe d'abord</strong>, puis on résout normalement.</p>
+      <div class="lesson-formula">1. Développer les parenthèses<br>2. Regrouper<br>3. Isoler x</div>
+      <div class="lesson-example">
+        <div class="ex-label">⚽ Exemple</div>
+        <div class="ex-content">
+          2(x + 4) = 14<br>
+          <span class="step">2x + 8 = 14</span><br>
+          <span class="step">2x = 14 − 8 = 6</span><br>
+          <span class="step">x = 6/2 = <strong>3</strong></span>
+        </div>
+      </div>
+    `,
+    exercise: { question: 'Résous : 3(x + 2) = 21', answer: '5' }
+  }
+],
+
+relatifs: [
+  {
+    title: 'Les nombres relatifs',
+    icon: '➕',
+    content: `
+      <p>Les <strong>nombres relatifs</strong> sont les nombres positifs ET négatifs. En foot, c'est la <strong>différence de buts</strong> !</p>
+      <p>L'OL gagne 3-1 → différence = <strong>+2</strong><br>L'OL perd 0-2 → différence = <strong>−2</strong></p>
+      <div class="lesson-formula">Les positifs (+) et les négatifs (−) sont les nombres relatifs</div>
+      <div class="lesson-tip">
+        <div class="tip-label">📌 Sur une droite</div>
+        ← −5  −4  −3  −2  −1  <strong>0</strong>  +1  +2  +3  +4  +5 →
+      </div>
+    `,
+    exercise: { question: 'Quel nombre est le plus grand : −3 ou −7 ?', choices: ['−3', '−7'], correct: 0 }
+  },
+  {
+    title: 'Addition de relatifs',
+    icon: '➕',
+    content: `
+      <p><strong>Même signe</strong> → on additionne et on garde le signe.<br>
+      <strong>Signes différents</strong> → on soustrait et on garde le signe du plus grand (en valeur absolue).</p>
+      <div class="lesson-example">
+        <div class="ex-label">⚽ Exemple</div>
+        <div class="ex-content">
+          (+5) + (+3) = <strong>+8</strong> (même signe, on additionne)<br>
+          (−4) + (−6) = <strong>−10</strong> (même signe, on additionne)<br>
+          (+7) + (−3) = <strong>+4</strong> (signes différents, 7−3, signe du plus grand)<br>
+          (−8) + (+5) = <strong>−3</strong> (signes différents, 8−5, signe du plus grand)
+        </div>
+      </div>
+    `,
+    exercise: { question: '(−6) + (+9) = ?', choices: ['+3', '−3', '+15', '−15'], correct: 0 }
+  },
+  {
+    title: 'Soustraction de relatifs',
+    icon: '➖',
+    content: `
+      <p><strong>Soustraire un nombre</strong>, c'est <strong>ajouter son opposé</strong>.</p>
+      <div class="lesson-formula">a − b = a + (−b)<br>a − (−b) = a + b</div>
+      <div class="lesson-example">
+        <div class="ex-label">⚽ Exemple</div>
+        <div class="ex-content">
+          (+5) − (+8) = (+5) + (−8) = <strong>−3</strong><br>
+          (+3) − (−4) = (+3) + (+4) = <strong>+7</strong><br>
+          <span class="step">Soustraire un négatif → on ajoute !</span>
+        </div>
+      </div>
+      <div class="lesson-tip">
+        <div class="tip-label">💡 Moyen mnémotechnique</div>
+        "Moins moins = plus" ! Deux signes négatifs qui se suivent donnent un plus.
+      </div>
+    `,
+    exercise: { question: '(+4) − (−3) = ?', choices: ['+7', '+1', '−7', '−1'], correct: 0 }
+  },
+  {
+    title: 'Multiplication de relatifs',
+    icon: '✖️',
+    content: `
+      <p>La règle des signes pour la multiplication :</p>
+      <div class="lesson-formula">(+) × (+) = (+)<br>(−) × (−) = (+)<br>(+) × (−) = (−)<br>(−) × (+) = (−)</div>
+      <p><strong>Même signe → positif, Signes différents → négatif</strong></p>
+      <div class="lesson-example">
+        <div class="ex-label">⚽ Exemple</div>
+        <div class="ex-content">
+          (−3) × (−5) = <strong>+15</strong> (même signe → +)<br>
+          (+4) × (−6) = <strong>−24</strong> (signes différents → −)
+        </div>
+      </div>
+    `,
+    exercise: { question: '(−7) × (−2) = ?', choices: ['+14', '−14', '+9', '−9'], correct: 0 }
+  }
+]
+
+};
+
+// ══════════════════════════════════════
+// LESSON ENGINE
+// ══════════════════════════════════════
+
+let lesson = { topicId: null, steps: [], current: 0 };
+
+function startLesson(topicId) {
+  const steps = LESSONS[topicId];
+  if (!steps) { showToast('❌', 'Cours pas encore disponible'); return; }
+  lesson = { topicId, steps, current: 0 };
+  const t = TOPICS.find(t => t.id === topicId);
+  document.getElementById('lessonTopicLabel').textContent = `📖 ${t ? t.name : topicId}`;
+  showScreen('screenLesson');
+  renderLessonStep();
+}
+
+function renderLessonStep() {
+  const s = lesson.steps[lesson.current];
+  const total = lesson.steps.length;
+  document.getElementById('lessonStepText').textContent = `Étape ${lesson.current + 1} / ${total}`;
+  document.getElementById('lessonProgressFill').style.width = ((lesson.current + 1) / total * 100) + '%';
+
+  const container = document.getElementById('lessonContent');
+  let html = `<div class="lesson-card">
+    <div class="lesson-icon">${s.icon}</div>
+    <h2>${s.title}</h2>
+    <div class="lesson-content">${s.content}</div>`;
+
+  // Exercise
+  if (s.exercise) {
+    const ex = s.exercise;
+    html += `<div class="lesson-exercise" id="lessonExercise">
+      <div class="ex-question">${ex.question}</div>`;
+
+    if (ex.choices) {
+      html += `<div class="mini-answers" id="miniAnswers">`;
+      ex.choices.forEach((c, i) => {
+        html += `<button class="mini-btn" onclick="checkLessonAnswer(this, ${i}, ${ex.correct})">${c}</button>`;
+      });
+      html += `</div>`;
+    } else if (ex.answer !== undefined) {
+      html += `<div class="lesson-input-row">
+        <input type="text" class="lesson-input" id="lessonExInput" placeholder="?" onkeydown="if(event.key==='Enter')checkLessonInput('${ex.answer}')">
+        <button class="lesson-ok-btn" onclick="checkLessonInput('${ex.answer}')">OK</button>
+      </div>`;
+    }
+    html += `<div class="mini-feedback" id="miniFeedback"></div></div>`;
+  }
+
+  html += `</div>`;
+  container.innerHTML = html;
+
+  // Nav buttons
+  document.getElementById('lessonPrevBtn').style.visibility = lesson.current === 0 ? 'hidden' : 'visible';
+  const nextBtn = document.getElementById('lessonNextBtn');
+  if (lesson.current >= total - 1) {
+    nextBtn.textContent = '⚽ Passer au match !';
+    nextBtn.onclick = () => startQuiz(lesson.topicId);
+  } else {
+    nextBtn.textContent = 'Suivant →';
+    nextBtn.onclick = () => lessonNext();
+  }
+}
+
+function checkLessonAnswer(btn, idx, correctIdx) {
+  const btns = document.querySelectorAll('#miniAnswers .mini-btn');
+  btns.forEach((b, i) => {
+    b.classList.add('disabled');
+    if (i === correctIdx) b.classList.add('mini-correct');
+    else if (i === idx && idx !== correctIdx) b.classList.add('mini-wrong');
+  });
+  const feedback = document.getElementById('miniFeedback');
+  if (idx === correctIdx) {
+    feedback.innerHTML = '<span style="color:var(--green)">⚽ Correct ! Bien joué !</span>';
+    // Bonus XP for lesson exercises
+    state.totalXp += 3;
+    state.currentXp += 3;
+    checkLevelUp();
+    saveState();
+    updateTopBarOnly();
+  } else {
+    feedback.innerHTML = '<span style="color:var(--red)">❌ Pas tout à fait... regarde l\'explication au-dessus !</span>';
+  }
+}
+
+function checkLessonInput(correctAnswer) {
+  const input = document.getElementById('lessonExInput');
+  const val = input.value.trim().replace(',', '.');
+  const feedback = document.getElementById('miniFeedback');
+  const isCorrect = val === correctAnswer || val === correctAnswer.replace('.', ',');
+  input.disabled = true;
+  if (isCorrect) {
+    input.style.borderColor = 'var(--green)';
+    feedback.innerHTML = '<span style="color:var(--green)">⚽ Correct ! Bien joué !</span>';
+    state.totalXp += 3;
+    state.currentXp += 3;
+    checkLevelUp();
+    saveState();
+    updateTopBarOnly();
+  } else {
+    input.style.borderColor = 'var(--red)';
+    feedback.innerHTML = `<span style="color:var(--red)">❌ La réponse était <strong>${correctAnswer}</strong>. Relis l'explication !</span>`;
+  }
+}
+
+function updateTopBarOnly() {
+  document.getElementById('totalXpDisplay').textContent = state.totalXp;
+  const needed = xpForLevel(state.level);
+  document.getElementById('levelDisplay').textContent = state.level;
+  document.getElementById('currentXp').textContent = state.currentXp;
+  document.getElementById('nextXp').textContent = needed;
+  document.getElementById('xpFill').style.width = (state.currentXp / needed * 100) + '%';
+  let title = 'Centre de formation';
+  for (const [xp, t] of TITLES) { if (state.totalXp >= xp) title = t; }
+  document.getElementById('playerTitle').textContent = title;
+}
+
+function lessonNext() {
+  if (lesson.current < lesson.steps.length - 1) {
+    lesson.current++;
+    renderLessonStep();
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  }
+}
+
+function lessonPrev() {
+  if (lesson.current > 0) {
+    lesson.current--;
+    renderLessonStep();
+    window.scrollTo({ top: 0, behavior: 'smooth' });
   }
 }
 
