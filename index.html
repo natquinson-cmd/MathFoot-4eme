@@ -46,12 +46,7 @@
       url('ucl-bg.jpg') center 30% / cover no-repeat,
       url('https://www.lespassionnes.fr/wp-content/uploads/2017/04/ligue-des-champions-2016.jpg') center 30% / cover no-repeat;
   }
-  /* Subtle overlay so the image is clearly visible but text remains readable */
-  .pitch-bg::before {
-    content: ''; position: absolute; top: 0; left: 0; right: 0; bottom: 0;
-    background:
-      linear-gradient(to bottom, rgba(5,10,26,0.45) 0%, rgba(5,10,26,0.6) 60%, rgba(5,10,26,0.8) 100%);
-  }
+  .pitch-bg::before { display: none; }
   .pitch-bg::after { display: none; }
 
   .pitch-line { display: none; }
