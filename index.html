@@ -3,26 +3,28 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>MathFoot - Maths & Football</title>
+<title>MathChampions - UEFA Champions League des Maths</title>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
 <style>
   @import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;700;800&display=swap');
 
   :root {
-    --bg: #0a1628;
-    --card: #112240;
-    --card2: #0d1b30;
-    --accent: #00e676;
-    --accent2: #1b5e20;
-    --gold: #ffd700;
+    --bg: #050a1a;
+    --card: #0e1e5b;
+    --card2: #091442;
+    --accent: #00e5ff;
+    --accent2: #1565c0;
+    --gold: #d4af37;
+    --silver: #c0c0c0;
     --green: #00e676;
-    --blue: #29b6f6;
+    --blue: #00e5ff;
     --red: #ff5252;
-    --pitch: #1a6b1a;
-    --pitch-light: #2e7d32;
-    --text: #e0e0e0;
-    --text2: #8899aa;
+    --ucl-navy: #0e1e5b;
+    --ucl-dark: #050a1a;
+    --star: #ffffff;
+    --text: #e8eaf6;
+    --text2: #7986cb;
     --radius: 16px;
   }
 
@@ -36,17 +38,44 @@
     overflow-x: hidden;
   }
 
-  /* ─── PITCH BACKGROUND ─── */
+  /* ─── UCL STARBALL BACKGROUND ─── */
   .pitch-bg {
     position: fixed; top: 0; left: 0; width: 100%; height: 100%;
     pointer-events: none; z-index: 0; overflow: hidden;
-    background: radial-gradient(ellipse at 50% 120%, rgba(26,107,26,0.15) 0%, transparent 60%);
+    background:
+      radial-gradient(ellipse at 30% 20%, rgba(14,30,91,0.6) 0%, transparent 50%),
+      radial-gradient(ellipse at 70% 80%, rgba(21,101,192,0.3) 0%, transparent 50%),
+      radial-gradient(ellipse at 50% 50%, rgba(0,229,255,0.05) 0%, transparent 40%);
   }
   .pitch-line {
-    position: absolute; border: 1px solid rgba(255,255,255,0.03); border-radius: 50%;
+    position: absolute;
   }
-  .pitch-line.center { width: 300px; height: 300px; top: 50%; left: 50%; transform: translate(-50%,-50%); }
-  .pitch-line.mid { width: 100%; height: 1px; top: 50%; border-radius: 0; background: rgba(255,255,255,0.03); }
+  .pitch-line.center {
+    width: 200px; height: 200px; top: 50%; left: 50%; transform: translate(-50%,-50%);
+    border: 1px solid rgba(255,255,255,0.04); border-radius: 50%;
+  }
+  .pitch-line.mid {
+    width: 100%; height: 1px; top: 50%; border-radius: 0;
+    background: linear-gradient(90deg, transparent, rgba(255,255,255,0.03), transparent);
+  }
+  /* Star decorations */
+  .pitch-bg::before {
+    content: ''; position: absolute; top: 0; left: 0; right: 0; bottom: 0;
+    background-image:
+      radial-gradient(1px 1px at 10% 15%, rgba(255,255,255,0.15), transparent),
+      radial-gradient(1px 1px at 25% 35%, rgba(255,255,255,0.1), transparent),
+      radial-gradient(1px 1px at 45% 10%, rgba(255,255,255,0.12), transparent),
+      radial-gradient(1px 1px at 60% 45%, rgba(255,255,255,0.08), transparent),
+      radial-gradient(1px 1px at 75% 20%, rgba(255,255,255,0.15), transparent),
+      radial-gradient(1px 1px at 90% 55%, rgba(255,255,255,0.1), transparent),
+      radial-gradient(1px 1px at 15% 70%, rgba(255,255,255,0.08), transparent),
+      radial-gradient(1px 1px at 35% 85%, rgba(255,255,255,0.12), transparent),
+      radial-gradient(1px 1px at 55% 65%, rgba(255,255,255,0.06), transparent),
+      radial-gradient(1px 1px at 80% 80%, rgba(255,255,255,0.1), transparent),
+      radial-gradient(2px 2px at 20% 50%, rgba(212,175,55,0.15), transparent),
+      radial-gradient(2px 2px at 70% 30%, rgba(212,175,55,0.12), transparent),
+      radial-gradient(2px 2px at 50% 90%, rgba(212,175,55,0.1), transparent);
+  }
 
   /* ─── FLOATING BALLS ─── */
   #particles { position: fixed; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; z-index: 0; }
@@ -68,11 +97,11 @@
   .topbar {
     display: flex; align-items: center; justify-content: space-between;
     padding: 12px 20px;
-    background: linear-gradient(135deg, var(--card), #0d2137);
+    background: linear-gradient(135deg, var(--card), #0a1847);
     border-radius: var(--radius); margin-bottom: 16px;
     flex-wrap: wrap; gap: 10px;
-    border: 1px solid rgba(0,230,118,0.1);
-    box-shadow: 0 4px 20px rgba(0,0,0,0.3);
+    border: 1px solid rgba(212,175,55,0.15);
+    box-shadow: 0 4px 20px rgba(0,0,0,0.4);
   }
   .topbar-left { display: flex; align-items: center; gap: 12px; }
   .avatar {
@@ -105,7 +134,7 @@
   }
   .xp-bar-fill {
     height: 100%; border-radius: 7px;
-    background: linear-gradient(90deg, var(--accent2), var(--green), var(--gold));
+    background: linear-gradient(90deg, var(--accent2), var(--blue), var(--gold));
     background-size: 200% 100%;
     animation: xpShine 3s linear infinite;
     transition: width 0.8s cubic-bezier(0.4,0,0.2,1);
@@ -119,9 +148,9 @@
   /* ─── HOME ─── */
   .welcome-banner {
     text-align: center; padding: 30px 20px; margin-bottom: 20px;
-    background: linear-gradient(135deg, #112240, #1a3a2a);
+    background: linear-gradient(135deg, #0e1e5b, #091442, #0a1847);
     border-radius: var(--radius);
-    border: 1px solid rgba(0,230,118,0.08);
+    border: 1px solid rgba(212,175,55,0.15);
     position: relative; overflow: hidden;
   }
   .welcome-banner::before {
@@ -130,7 +159,7 @@
     pointer-events: none;
   }
   .welcome-banner h1 { font-size: 32px; font-weight: 800; margin-bottom: 8px; position: relative; }
-  .welcome-banner h1 .foot { color: var(--green); }
+  .welcome-banner h1 .foot { color: var(--gold); }
   .welcome-banner p { color: var(--text2); font-size: 15px; position: relative; }
 
   .section-title {
@@ -148,8 +177,8 @@
     position: relative; overflow: hidden;
   }
   .topic-card:hover {
-    transform: translateY(-4px); border-color: var(--green);
-    box-shadow: 0 8px 30px rgba(0,230,118,0.15);
+    transform: translateY(-4px); border-color: var(--gold);
+    box-shadow: 0 8px 30px rgba(212,175,55,0.15);
   }
   .topic-card .emoji { font-size: 36px; margin-bottom: 10px; }
   .topic-card h3 { font-size: 16px; font-weight: 700; margin-bottom: 4px; }
@@ -158,9 +187,9 @@
     display: inline-block; font-size: 11px; font-weight: 600;
     padding: 3px 10px; border-radius: 10px;
   }
-  .diff-facile { background: rgba(0,230,118,0.15); color: var(--green); }
-  .diff-moyen { background: rgba(41,182,246,0.15); color: var(--blue); }
-  .diff-difficile { background: rgba(255,82,82,0.15); color: var(--red); }
+  .diff-facile { background: rgba(0,230,118,0.15); color: #69f0ae; }
+  .diff-moyen { background: rgba(0,229,255,0.12); color: var(--blue); }
+  .diff-difficile { background: rgba(212,175,55,0.15); color: var(--gold); }
 
   .topic-progress { margin-top: 10px; height: 4px; background: var(--card2); border-radius: 2px; }
   .topic-progress-fill { height: 100%; border-radius: 2px; background: var(--green); transition: width 0.5s; }
@@ -176,8 +205,8 @@
     margin-bottom: 16px; flex-wrap: wrap; gap: 10px;
   }
   .quiz-topic-label {
-    font-size: 14px; font-weight: 600; color: var(--green);
-    background: rgba(0,230,118,0.1); padding: 4px 14px; border-radius: 12px;
+    font-size: 14px; font-weight: 600; color: var(--blue);
+    background: rgba(0,229,255,0.1); padding: 4px 14px; border-radius: 12px;
   }
   .quiz-progress-text { font-size: 14px; color: var(--text2); }
 
@@ -185,7 +214,7 @@
     text-align: center; margin-bottom: 16px;
     font-size: 36px; font-weight: 800; letter-spacing: 4px;
   }
-  .score-display .home-score { color: var(--green); }
+  .score-display .home-score { color: var(--blue); }
   .score-display .sep { color: var(--text2); margin: 0 8px; }
   .score-display .away-score { color: var(--red); }
 
@@ -203,7 +232,7 @@
   .question-card {
     background: var(--card); border-radius: var(--radius); padding: 28px;
     margin-bottom: 16px; text-align: center;
-    border: 1px solid rgba(0,230,118,0.08);
+    border: 1px solid rgba(212,175,55,0.1);
     position: relative;
   }
   .question-card .q-label {
@@ -221,7 +250,7 @@
     font-family: 'Outfit', 'Cambria Math', sans-serif;
   }
   .answer-btn:hover:not(.disabled) {
-    border-color: var(--green); background: rgba(0,230,118,0.08);
+    border-color: var(--blue); background: rgba(0,229,255,0.08);
     transform: scale(1.03);
   }
   .answer-btn.correct {
@@ -241,21 +270,21 @@
   .explanation-box {
     background: var(--card2); border-radius: 12px; padding: 16px;
     margin-top: 12px; font-size: 14px; line-height: 1.6;
-    border-left: 4px solid var(--green); display: none; text-align: left;
+    border-left: 4px solid var(--blue); display: none; text-align: left;
   }
   .explanation-box.visible { display: block; animation: fadeIn 0.3s; }
 
   .input-answer-section { text-align: center; margin-bottom: 16px; }
   .input-answer {
-    background: var(--card2); border: 2px solid rgba(0,230,118,0.2);
+    background: var(--card2); border: 2px solid rgba(0,229,255,0.2);
     border-radius: 12px; padding: 14px 20px; font-size: 22px;
     color: #fff; text-align: center; width: 200px; font-family: 'Outfit', sans-serif;
     font-weight: 600; outline: none; transition: border-color 0.3s;
   }
-  .input-answer:focus { border-color: var(--green); }
+  .input-answer:focus { border-color: var(--blue); }
   .validate-btn {
     display: inline-block; margin-left: 10px; padding: 14px 28px;
-    background: linear-gradient(135deg, var(--accent2), var(--green));
+    background: linear-gradient(135deg, var(--accent2), var(--blue));
     border: none; border-radius: 12px; color: #fff; font-size: 16px;
     font-weight: 700; cursor: pointer; transition: transform 0.2s;
     font-family: 'Outfit', sans-serif;
@@ -270,8 +299,8 @@
   }
   .goal-overlay.show { animation: goalFlash 1.2s ease-out forwards; }
   .goal-text {
-    font-size: 80px; font-weight: 900; color: var(--green);
-    text-shadow: 0 0 40px rgba(0,230,118,0.5), 0 0 80px rgba(0,230,118,0.3);
+    font-size: 80px; font-weight: 900; color: var(--gold);
+    text-shadow: 0 0 40px rgba(212,175,55,0.5), 0 0 80px rgba(212,175,55,0.3);
     letter-spacing: 8px;
   }
   @keyframes goalFlash {
@@ -284,7 +313,7 @@
   /* ─── RESULTS (POST-MATCH) ─── */
   .results-card {
     background: var(--card); border-radius: var(--radius); padding: 30px;
-    text-align: center; border: 1px solid rgba(0,230,118,0.08);
+    text-align: center; border: 1px solid rgba(212,175,55,0.1);
   }
   .results-emoji { font-size: 64px; margin-bottom: 12px; }
   .results-title { font-size: 28px; font-weight: 800; margin-bottom: 8px; }
@@ -293,7 +322,7 @@
   .match-score-final {
     font-size: 48px; font-weight: 900; margin-bottom: 20px; letter-spacing: 6px;
   }
-  .match-score-final .w { color: var(--green); }
+  .match-score-final .w { color: var(--blue); }
   .match-score-final .l { color: var(--red); }
   .match-score-final .s { color: var(--text2); }
 
@@ -304,7 +333,7 @@
 
   .xp-gained {
     display: inline-block; padding: 8px 24px; border-radius: 20px;
-    background: linear-gradient(135deg, var(--accent2), var(--green));
+    background: linear-gradient(135deg, var(--accent2), var(--blue));
     font-weight: 700; font-size: 18px; margin-bottom: 20px;
     animation: goalPop 0.6s;
   }
@@ -316,7 +345,7 @@
     font-family: 'Outfit', sans-serif;
   }
   .btn:hover { transform: translateY(-2px); }
-  .btn-primary { background: linear-gradient(135deg, var(--accent2), var(--green)); color: #fff; }
+  .btn-primary { background: linear-gradient(135deg, var(--accent2), var(--blue)); color: #fff; }
   .btn-secondary { background: var(--card2); color: var(--text); }
 
   /* ─── TROPHIES ─── */
@@ -333,7 +362,7 @@
 
   /* ─── DAILY ─── */
   .daily-banner {
-    background: linear-gradient(135deg, #112240, #1a3a2a);
+    background: linear-gradient(135deg, #0e1e5b, #091442);
     border: 2px solid var(--gold);
     border-radius: var(--radius); padding: 20px; margin-bottom: 16px;
     cursor: pointer; transition: all 0.3s; text-align: center;
@@ -371,7 +400,7 @@
   /* ─── NAV ─── */
   .bottom-nav {
     position: fixed; bottom: 0; left: 0; right: 0;
-    background: var(--card); border-top: 1px solid rgba(0,230,118,0.08);
+    background: var(--card); border-top: 1px solid rgba(212,175,55,0.12);
     display: flex; justify-content: center; gap: 0; padding: 8px 0; z-index: 100;
   }
   .nav-btn {
@@ -379,7 +408,7 @@
     padding: 8px 24px; display: flex; flex-direction: column; align-items: center;
     gap: 4px; font-family: 'Outfit', sans-serif; transition: color 0.2s;
   }
-  .nav-btn.active { color: var(--green); }
+  .nav-btn.active { color: var(--gold); }
   .nav-btn .nav-icon { font-size: 22px; }
   .nav-btn .nav-label { font-size: 11px; font-weight: 600; }
 
@@ -516,7 +545,7 @@
     background: rgba(41,182,246,0.15); color: var(--blue);
   }
   .topic-action-btn.action-match {
-    background: rgba(0,230,118,0.15); color: var(--green);
+    background: rgba(0,229,255,0.15); color: var(--blue);
   }
 
   /* ─── RESPONSIVE ─── */
@@ -539,7 +568,7 @@
 <div id="particles"></div>
 <div class="toast-container" id="toastContainer"></div>
 <div class="combo-display" id="comboDisplay"></div>
-<div class="goal-overlay" id="goalOverlay"><div class="goal-text">BUUUUT !</div></div>
+<div class="goal-overlay" id="goalOverlay"><div class="goal-text">⭐ GOAL !</div></div>
 
 <div class="app">
   <!-- SCOREBOARD -->
@@ -561,8 +590,8 @@
   <!-- SAISON BAR -->
   <div class="xp-section">
     <div class="xp-header">
-      <span>Division <strong id="levelDisplay">1</strong></span>
-      <span><span id="currentXp">0</span> / <span id="nextXp">100</span> pts pour monter</span>
+      <span>Tour <strong id="levelDisplay">1</strong></span>
+      <span><span id="currentXp">0</span> / <span id="nextXp">100</span> pts pour le tour suivant</span>
     </div>
     <div class="xp-bar-bg"><div class="xp-bar-fill" id="xpFill" style="width:0%"></div></div>
   </div>
@@ -570,20 +599,20 @@
   <!-- ═══ HOME ═══ -->
   <div class="screen active" id="screenHome">
     <div class="welcome-banner">
-      <h1>Math<span class="foot">Foot</span> ⚽</h1>
-      <p>De l'OL au Real Madrid, marque des buts en résolvant des maths !</p>
+      <h1>Math<span class="foot">Champions</span> ⭐</h1>
+      <p>Remporte la Ligue des Champions des Maths !</p>
     </div>
 
     <div class="daily-banner" id="dailyBanner" onclick="startDaily()">
-      <h3>🏆 Match du jour — OL vs Real</h3>
-      <p>10 tirs au but au Groupama Stadium — Points doublés !</p>
+      <h3>⭐ Finale du jour — OL vs Real Madrid</h3>
+      <p>10 tirs au but en finale de Champions League — Points doublés !</p>
       <p id="dailyStatus" style="margin-top:6px;font-size:12px;color:var(--green);"></p>
     </div>
 
-    <div class="section-title">⚽ Entraînements</div>
+    <div class="section-title">⭐ Phase de groupes</div>
     <div class="topics-grid" id="topicsGrid"></div>
 
-    <div class="section-title">🏆 Palmarès</div>
+    <div class="section-title">🏆 Trophées UCL</div>
     <div class="achievements-grid" id="achievementsHome"></div>
 
     <div class="spacer-bottom"></div>
@@ -653,10 +682,10 @@
 
   <!-- ═══ STATS ═══ -->
   <div class="screen" id="screenStats">
-    <div class="section-title">📊 Statistiques de carrière</div>
+    <div class="section-title">📊 Statistiques Champions League</div>
     <div class="stat-row">
       <div class="stat-card"><h3>Total points</h3><div class="big-val" id="statTotalXp" style="color:var(--green)">0</div></div>
-      <div class="stat-card"><h3>Division</h3><div class="big-val" id="statLevel" style="color:var(--blue)">1</div></div>
+      <div class="stat-card"><h3>Tour UCL</h3><div class="big-val" id="statLevel" style="color:var(--blue)">1</div></div>
     </div>
     <div class="stat-row">
       <div class="stat-card"><h3>Tirs tentés</h3><div class="big-val" id="statSolved" style="color:var(--green)">0</div></div>
@@ -664,9 +693,9 @@
     </div>
     <div class="stat-row">
       <div class="stat-card"><h3>Meilleur enchaînement</h3><div class="big-val" id="statStreak" style="color:var(--red)">0</div></div>
-      <div class="stat-card"><h3>Jours d'entraînement</h3><div class="big-val" id="statDays" style="color:var(--gold)">0</div></div>
+      <div class="stat-card"><h3>Jours de compétition</h3><div class="big-val" id="statDays" style="color:var(--gold)">0</div></div>
     </div>
-    <div class="section-title">🏆 Palmarès complet</div>
+    <div class="section-title">🏆 Tous les trophées UCL</div>
     <div class="achievements-grid" id="achievementsStats"></div>
     <div class="spacer-bottom"></div>
   </div>
@@ -674,8 +703,8 @@
   <!-- ═══ COURS MENU ═══ -->
   <div class="screen" id="screenCours">
     <div class="welcome-banner">
-      <h1>📖 Centre de <span class="foot">Formation</span></h1>
-      <p>Apprends les notions avant de jouer le match !</p>
+      <h1>📖 Académie <span class="foot">Champions</span></h1>
+      <p>Maîtrise les tactiques avant d'entrer sur le terrain !</p>
     </div>
     <div class="section-title">📚 Choisis un cours</div>
     <div class="topics-grid" id="coursGrid"></div>
@@ -686,10 +715,10 @@
 <!-- BOTTOM NAV -->
 <div class="bottom-nav">
   <button class="nav-btn active" onclick="showScreen('screenHome')" id="navHome">
-    <span class="nav-icon">🏟️</span><span class="nav-label">Stade</span>
+    <span class="nav-icon">⭐</span><span class="nav-label">UCL</span>
   </button>
   <button class="nav-btn" onclick="showScreen('screenStats')" id="navStats">
-    <span class="nav-icon">📊</span><span class="nav-label">Carrière</span>
+    <span class="nav-icon">📊</span><span class="nav-label">Stats</span>
   </button>
   <button class="nav-btn" onclick="showScreen('screenCours')" id="navCours">
     <span class="nav-icon">📖</span><span class="nav-label">Cours</span>
@@ -702,15 +731,15 @@
 // ══════════════════════════════════════
 
 const TITLES = [
-  [0, 'Centre de formation OL'],
-  [100, 'Remplaçant OL'],
-  [300, 'Titulaire à Lyon'],
-  [600, 'Capitaine de l\'OL'],
-  [1000, 'Sélectionné en Bleus'],
-  [1600, 'Titulaire Équipe de France'],
-  [2500, 'Star du Real Madrid'],
-  [4000, 'Ballon d\'Or comme Mbappé'],
-  [6000, 'Légende OL + Real + Bleus']
+  [0, 'Tour préliminaire'],
+  [100, 'Phase de groupes'],
+  [300, 'Huitièmes de finale'],
+  [600, 'Quarts de finale'],
+  [1000, 'Demi-finale'],
+  [1600, 'Finaliste UCL'],
+  [2500, 'Champion d\'Europe ⭐'],
+  [4000, 'Légende UCL ⭐⭐'],
+  [6000, 'GOAT Champions League ⭐⭐⭐']
 ];
 
 const PLAYERS = ['Mbappé','Lacazette','Cherki','Tolisso','Caqueret','Griezmann','Benzema','Tchouaméni','Vinícius Jr','Bellingham'];
@@ -721,19 +750,19 @@ function rTeam() { return TEAMS[randInt(0, TEAMS.length-1)]; }
 function rStade() { return STADES[randInt(0, STADES.length-1)]; }
 
 const ACHIEVEMENTS = [
-  { id:'first_quiz', icon:'⚽', name:'Début à l\'OL', desc:'Joue ton premier match', check: s => s.totalSolved >= 5 },
-  { id:'streak_3', icon:'🎩', name:'Hat-trick', desc:'3 buts comme Mbappé', check: s => s.bestStreak >= 3 },
-  { id:'streak_5', icon:'🔥', name:'En feu !', desc:'5 buts d\'affilée', check: s => s.bestStreak >= 5 },
+  { id:'first_quiz', icon:'⭐', name:'Qualifié !', desc:'Joue ton premier match UCL', check: s => s.totalSolved >= 5 },
+  { id:'streak_3', icon:'🎩', name:'Hat-trick UCL', desc:'3 buts d\'affilée comme Mbappé', check: s => s.bestStreak >= 3 },
+  { id:'streak_5', icon:'🔥', name:'Nuit magique', desc:'5 buts d\'affilée en Champions !', check: s => s.bestStreak >= 5 },
   { id:'streak_10', icon:'💫', name:'Mode Mbappé', desc:'10 buts d\'affilée !', check: s => s.bestStreak >= 10 },
-  { id:'perfect', icon:'🥇', name:'Clean sheet', desc:'10/10 comme un vrai Bleu', check: s => s.perfectQuizzes >= 1 },
-  { id:'xp_500', icon:'🏅', name:'Trophée Ligue 1', desc:'Accumule 500 points', check: s => s.totalXp >= 500 },
-  { id:'xp_2000', icon:'🏆', name:'Champions League', desc:'Accumule 2000 points', check: s => s.totalXp >= 2000 },
-  { id:'solved_50', icon:'👟', name:'50 tirs', desc:'Comme à l\'entraînement OL', check: s => s.totalSolved >= 50 },
-  { id:'solved_200', icon:'⭐', name:'200 tirs', desc:'Digne du Bernabéu', check: s => s.totalSolved >= 200 },
-  { id:'daily_3', icon:'📅', name:'Pro du Parc OL', desc:'3 matchs du jour joués', check: s => s.dailyCompleted >= 3 },
-  { id:'speed', icon:'⚡', name:'Vitesse Mbappé', desc:'But en moins de 3s', check: s => s.fastAnswer },
-  { id:'all_topics', icon:'🇫🇷', name:'International', desc:'Joue tous les entraînements', check: s => s.topicsPlayed >= TOPICS.length },
-  { id:'level_5', icon:'👑', name:'Galactique', desc:'Atteins la division 5', check: s => s.level >= 5 },
+  { id:'perfect', icon:'🥇', name:'Clean sheet', desc:'10/10 digne d\'une finale UCL', check: s => s.perfectQuizzes >= 1 },
+  { id:'xp_500', icon:'🏅', name:'Meilleur buteur', desc:'500 points en Champions League', check: s => s.totalXp >= 500 },
+  { id:'xp_2000', icon:'🏆', name:'Aux grandes oreilles', desc:'2000 points — le trophée est à toi !', check: s => s.totalXp >= 2000 },
+  { id:'solved_50', icon:'👟', name:'50 frappes', desc:'50 tirs en Champions League', check: s => s.totalSolved >= 50 },
+  { id:'solved_200', icon:'⭐', name:'Légende UCL', desc:'200 tirs — record historique !', check: s => s.totalSolved >= 200 },
+  { id:'daily_3', icon:'📅', name:'Triple journée', desc:'3 finales du jour jouées', check: s => s.dailyCompleted >= 3 },
+  { id:'speed', icon:'⚡', name:'Frappe éclair', desc:'But en moins de 3s comme Mbappé', check: s => s.fastAnswer },
+  { id:'all_topics', icon:'🌍', name:'Complet', desc:'Joue tous les matchs de poule', check: s => s.topicsPlayed >= TOPICS.length },
+  { id:'level_5', icon:'👑', name:'Demi-finaliste', desc:'Atteins les demi-finales UCL', check: s => s.level >= 5 },
 ];
 
 const TOPICS = [
@@ -1360,7 +1389,7 @@ function checkLevelUp() {
     state.currentXp -= needed;
     state.level++;
     needed = xpForLevel(state.level);
-    showToast('⬆️', `Division ${state.level} atteinte !`);
+    showToast('⭐', `Tour ${state.level} atteint !`);
   }
 }
 
@@ -1368,7 +1397,7 @@ function checkAchievements() {
   ACHIEVEMENTS.forEach(a => {
     if (!state.achievements.includes(a.id) && a.check(state)) {
       state.achievements.push(a.id);
-      showToast(a.icon, `Trophée : ${a.name}`);
+      showToast(a.icon, `🏆 ${a.name} débloqué !`);
     }
   });
 }
@@ -1492,20 +1521,20 @@ function showGoal() {
 
 function showCombo(n) {
   const el = document.getElementById('comboDisplay');
-  if (n === 3) el.textContent = '🎩 HAT-TRICK !';
+  if (n === 3) el.textContent = '🎩 HAT-TRICK UCL !';
   else if (n === 4) el.textContent = '🔥 POKER !';
-  else if (n === 5) el.textContent = '💫 QUINTUPLÉ !';
-  else if (n >= 10) el.textContent = `👑 MODE MBAPPÉ x${n} !`;
-  else if (n >= 7) el.textContent = `🇫🇷 ALLEZ LES BLEUS x${n} !`;
-  else el.textContent = `⚽ x${n} !`;
+  else if (n === 5) el.textContent = '💫 NUIT MAGIQUE !';
+  else if (n >= 10) el.textContent = `👑 LÉGENDE x${n} !`;
+  else if (n >= 7) el.textContent = `⭐ BALLON D'OR x${n} !`;
+  else el.textContent = `⭐ x${n} !`;
   el.className = 'combo-display show';
-  el.style.color = n >= 7 ? 'var(--gold)' : n >= 5 ? '#ff6b6b' : 'var(--green)';
+  el.style.color = n >= 7 ? 'var(--gold)' : n >= 5 ? '#ff6b6b' : 'var(--blue)';
   setTimeout(() => el.className = 'combo-display', 1000);
 }
 
 function createParticles() {
   const container = document.getElementById('particles');
-  const icons = ['⚽','⚽','⚽','🥅','🏆','⭐','👟'];
+  const icons = ['⭐','⭐','⭐','✨','🏆','⚽','🌟'];
   for (let i = 0; i < 15; i++) {
     const p = document.createElement('div');
     p.className = 'particle';
